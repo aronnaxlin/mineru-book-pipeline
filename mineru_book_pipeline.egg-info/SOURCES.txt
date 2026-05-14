@@ -1,0 +1,16 @@
+pyproject.toml
+mineru_book_pipeline.egg-info/PKG-INFO
+mineru_book_pipeline.egg-info/SOURCES.txt
+mineru_book_pipeline.egg-info/dependency_links.txt
+mineru_book_pipeline.egg-info/entry_points.txt
+mineru_book_pipeline.egg-info/requires.txt
+mineru_book_pipeline.egg-info/top_level.txt
+mineru_pipeline/__init__.py
+mineru_pipeline/cli.py
+mineru_pipeline/core.py
+mineru_pipeline/fingerprint.py
+mineru_pipeline/loader.py
+mineru_pipeline/plugins/__init__.py
+mineru_pipeline/plugins/base.py
+mineru_pipeline/plugins/cjk_spacing.py
+mineru_pipeline/plugins/qr_filter.py

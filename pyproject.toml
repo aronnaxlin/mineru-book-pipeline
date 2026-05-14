@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mineru-book-pipeline"
+version = "0.1.0"
+description = "Generic MinerU → MkDocs Material pipeline with plugin support"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+qr = ["opencv-python>=4.8.0"]
+cjk = ["pangu>=4.0.0"]
+all = ["opencv-python>=4.8.0", "pangu>=4.0.0"]
+
+[project.scripts]
+mineru-export = "mineru_pipeline.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mineru_pipeline*"]

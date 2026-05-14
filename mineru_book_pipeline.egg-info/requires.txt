@@ -1,0 +1,11 @@
+pyyaml>=6.0
+
+[all]
+opencv-python>=4.8.0
+pangu>=4.0.0
+
+[cjk]
+pangu>=4.0.0
+
+[qr]
+opencv-python>=4.8.0

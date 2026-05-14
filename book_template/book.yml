@@ -1,0 +1,70 @@
+# book.yml — 新书配置文件，复制此模板并填写
+# 运行: mineru-export book.yml
+
+# MinerU 输出根目录（包含各分册子目录）
+mineru_root: resources/mineru
+
+# MkDocs docs/ 目录
+docs_out: docs
+
+# 目录页最大页码，此页码之前的标题匹配会被忽略（避免把目录当章节边界）
+toc_max_page: 10
+
+# 启用的插件（内置: qr_filter, cjk_spacing；也可填 dotted import 路径）
+plugins:
+  - qr_filter
+  - cjk_spacing
+
+# 章节列表
+# volume_uid: MinerU 输出目录名中包含的 UUID 前缀（8位即可）
+# start_pattern: 匹配章节首行标题的正则表达式
+chapters:
+  - slug: ch01-overview
+    title: 第1章 概述
+    volume_uid: 73d5b3e7
+    start_pattern: "^第\\s*1\\s*章\\s*概述"
+
+  - slug: ch02-physical
+    title: 第2章 物理层
+    volume_uid: 73d5b3e7
+    start_pattern: "^第\\s*2\\s*章\\s*物理层"
+
+  - slug: ch03-datalink
+    title: 第3章 数据链路层
+    volume_uid: 73d5b3e7
+    start_pattern: "^第\\s*3\\s*章\\s*数据链路层"
+
+  - slug: ch04-network
+    title: 第4章 网络层
+    volume_uid: 73d5b3e7
+    start_pattern: "^第\\s*4\\s*章\\s*网络层"
+
+  - slug: ch05-transport
+    title: 第5章 运输层
+    volume_uid: a61ffdaa
+    start_pattern: "^第\\s*5\\s*章\\s*运输层"
+
+  - slug: ch06-application
+    title: 第6章 应用层
+    volume_uid: a61ffdaa
+    start_pattern: "^第\\s*6\\s*章\\s*应用层"
+
+  - slug: ch07-security
+    title: 第7章 网络安全
+    volume_uid: a61ffdaa
+    start_pattern: "^第\\s*7\\s*章\\s*网络安全"
+
+  - slug: ch08-av
+    title: 第8章 互联网上的音频/视频服务
+    volume_uid: a61ffdaa
+    start_pattern: "^第\\s*8\\s*章"
+
+  - slug: ch09-wireless
+    title: 第9章 无线网络和移动网络
+    volume_uid: b4a4de61
+    start_pattern: "^第\\s*9\\s*章"
+
+  - slug: appendix-a
+    title: 附录A 部分习题的解答
+    volume_uid: b4a4de61
+    start_pattern: "^附录\\s*A"
