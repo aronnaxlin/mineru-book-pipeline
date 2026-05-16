@@ -7,6 +7,22 @@ description: Use when an AI agent needs to turn MinerU local output or MinerU cl
 
 Use this skill to configure, run, verify, and troubleshoot the MinerU -> MkDocs Material pipeline.
 
+## Install The Toolchain
+
+If the current machine does not already have the project, install it first:
+
+```bash
+git clone https://github.com/aronnaxlin/mineru-book-pipeline.git
+cd mineru-book-pipeline
+pip install -e ".[all]"
+```
+
+For a new book workspace, copy `book_template/` outside the toolchain repo or
+use it as the starting point for `book.yml`, `mkdocs.yml`, `.env.example`, and
+`Makefile`. Keep real PDFs, MinerU output, `.env`, generated `docs/`, and
+generated `site/` out of the toolchain repository unless the user explicitly
+asks to commit a book project.
+
 ## Workflow
 
 1. Inspect the book workspace:
@@ -85,6 +101,18 @@ Each export rebuilds:
 - `docs/images/`
 
 Do not hand-edit generated chapter Markdown as a long-term fix. Instead, update `book.yml`, source MinerU output, or add a plugin.
+
+## Code And HTML Prose
+
+MinerU code items may store their body in `code_body` rather than `text`.
+The exporter preserves already-fenced code blocks from MinerU and falls back
+to wrapping unfenced code. If a chapter appears to drop examples after phrases
+like "示例代码如下", inspect the source `*_content_list.json` for `type: code`
+items before editing generated Markdown.
+
+Literal HTML/XML tags in normal prose and captions are escaped during export
+so textbooks can discuss tags such as `<span>` without MkDocs rendering them
+as real HTML. Raw `table_body` HTML is preserved as table markup.
 
 ## References
 

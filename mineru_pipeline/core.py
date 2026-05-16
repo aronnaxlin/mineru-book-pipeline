@@ -74,12 +74,50 @@ _EN_CHAPTER_RE = re.compile(
     re.IGNORECASE,
 )
 _NUMBERED_RE = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)*)\b")
+_FENCE_RE = re.compile(r"^```", re.MULTILINE)
 
 
 def _caption_text(raw) -> str:
     if isinstance(raw, list):
         return " ".join(str(x) for x in raw).strip()
     return str(raw).strip() if raw else ""
+
+
+def _escape_inline_html(text: str) -> str:
+    """Render literal tags in prose instead of letting Markdown parse HTML."""
+    return text.replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _apply_text_plugins(
+    item: dict,
+    text: str,
+    plugins: Sequence[ExportPlugin],
+) -> str:
+    for plugin in plugins:
+        text = plugin.on_text(item, text)
+    return _escape_inline_html(text)
+
+
+def _code_body(item: dict) -> str:
+    for key in ("code_body", "text", "content"):
+        raw = item.get(key)
+        if raw:
+            if isinstance(raw, list):
+                return "\n".join(str(part) for part in raw).strip()
+            return str(raw).strip()
+    return ""
+
+
+def _format_code_block(code: str) -> str | None:
+    if not code:
+        return None
+    if code.lstrip().startswith("```"):
+        # MinerU v4 usually emits already-fenced code_body. Preserve the
+        # language hint and content, only close an accidentally dangling fence.
+        if len(_FENCE_RE.findall(code)) % 2 == 1:
+            code = f"{code}\n```"
+        return code
+    return f"```\n{code}\n```"
 
 
 def _load_volume(vol_dir: Path) -> list[dict]:
@@ -317,13 +355,10 @@ def _item_to_md(
         raw_caption = item.get("img_caption", "")
         caption = _caption_text(raw_caption)
         alt = caption if caption else out_name
-        for plugin in plugins:
-            alt = plugin.on_text(item, alt)
+        alt = _apply_text_plugins(item, alt, plugins)
         lines = [f"![{alt}](../images/{out_name})"]
         if caption:
-            cap_display = caption
-            for plugin in plugins:
-                cap_display = plugin.on_text(item, cap_display)
+            cap_display = _apply_text_plugins(item, caption, plugins)
             lines.append(f"*{cap_display}*")
         return "\n".join(lines)
 
@@ -345,9 +380,7 @@ def _item_to_md(
         body = item.get("table_body", "")
         parts = []
         if caption:
-            cap_display = caption
-            for plugin in plugins:
-                cap_display = plugin.on_text(item, cap_display)
+            cap_display = _apply_text_plugins(item, caption, plugins)
             parts.append(f"**{cap_display}**")
         if body:
             parts.append(body)
@@ -355,8 +388,7 @@ def _item_to_md(
 
     # ---- code ----
     if t == "code":
-        code = item.get("text", "").strip()
-        return f"```\n{code}\n```" if code else None
+        return _format_code_block(_code_body(item))
 
     # ---- all text-like types ----
     text = item.get("text", "").strip()
@@ -365,16 +397,13 @@ def _item_to_md(
 
     if t == "text":
         level = item.get("text_level")
-        for plugin in plugins:
-            text = plugin.on_text(item, text)
+        text = _apply_text_plugins(item, text, plugins)
         if level and level in _LEVEL_MAP:
             return f"{_LEVEL_MAP[level]} {text}"
         return text
 
     # list, aside_text, chart, …
-    for plugin in plugins:
-        text = plugin.on_text(item, text)
-    return text
+    return _apply_text_plugins(item, text, plugins)
 
 
 # ---------------------------------------------------------------------------
