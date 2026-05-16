@@ -24,7 +24,7 @@ fmt:
 
 ## fingerprint: Generate/diff SHA-256 fingerprints for docs/
 fingerprint:
-	$(PYTHON) -m mineru_pipeline.fingerprint --docs-dir $(DOCS_OUT) --out $(REPORTS)/fingerprints.json
+	$(PYTHON) -m minerupress.fingerprint --docs-dir $(DOCS_OUT) --out $(REPORTS)/fingerprints.json
 
 ## serve: Start MkDocs dev server
 serve:

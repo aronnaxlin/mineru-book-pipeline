@@ -59,7 +59,7 @@ mkdocs build --strict
 If Markdown fingerprints are part of the project workflow:
 
 ```bash
-python -m mineru_pipeline.fingerprint --docs-dir docs --out reports/fingerprints.json
+python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
 ## Chapter Boundary Guidance

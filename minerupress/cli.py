@@ -1,5 +1,5 @@
 """
-mineru_pipeline.cli
+minerupress.cli
 ~~~~~~~~~~~~~~~~~~~
 Command-line entry points:
   minerupress-export — convert local MinerU output to per-chapter Markdown

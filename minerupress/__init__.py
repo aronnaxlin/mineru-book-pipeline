@@ -1,19 +1,9 @@
-"""Public MineruPress import surface.
-
-The original ``mineru_pipeline`` package remains available for compatibility.
-New integrations should import from ``minerupress``.
-"""
-
-from mineru_pipeline import (
-    BookConfig,
-    ChapterConfig,
-    CJKSpacingPlugin,
-    CloudflarePagesPlugin,
-    ExportPlugin,
-    QRFilterPlugin,
-    export,
-    load_book_config,
-)
+from .core import export, BookConfig, ChapterConfig
+from .loader import load_book_config
+from .plugins.base import ExportPlugin
+from .plugins.qr_filter import QRFilterPlugin
+from .plugins.cjk_spacing import CJKSpacingPlugin
+from .plugins.cf_pages import CloudflarePagesPlugin
 
 __all__ = [
     "export",

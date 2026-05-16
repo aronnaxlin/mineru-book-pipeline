@@ -1,5 +1,5 @@
 """
-mineru_pipeline.api_client
+minerupress.api_client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 MinerU Precise API (v4) client.
 
@@ -19,7 +19,7 @@ chunk, and returns a list of output directories.
 
 Usage
 -----
-    from mineru_pipeline.api_client import MinerUClient
+    from minerupress.api_client import MinerUClient
 
     client = MinerUClient(token="your-token")
     out_dirs = client.fetch(pdf_path=Path("book.pdf"), dest=Path("resources/mineru"))

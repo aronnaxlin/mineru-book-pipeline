@@ -1,10 +1,10 @@
 """
-mineru_pipeline.fingerprint
+minerupress.fingerprint
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SHA-256 content fingerprints for all Markdown files under docs/.
 
 Usage:
-    python -m mineru_pipeline.fingerprint [--docs-dir DIR] [--out FILE]
+    python -m minerupress.fingerprint [--docs-dir DIR] [--out FILE]
 """
 
 from __future__ import annotations

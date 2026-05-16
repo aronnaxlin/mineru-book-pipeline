@@ -1,5 +1,5 @@
 """
-mineru_pipeline.core
+minerupress.core
 ~~~~~~~~~~~~~~~~~~~~
 Generic MinerU content_list.json → Markdown exporter engine.
 

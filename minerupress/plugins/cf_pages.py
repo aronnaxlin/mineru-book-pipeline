@@ -1,5 +1,5 @@
 """
-mineru_pipeline.plugins.cf_pages
+minerupress.plugins.cf_pages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Post-export plugin that deploys the built MkDocs site to Cloudflare Pages
 via `wrangler pages deploy`.

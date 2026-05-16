@@ -31,11 +31,11 @@ cjk = ["pangu>=4.0.0"]
 all = ["opencv-python>=4.8.0", "pangu>=4.0.0"]
 
 [project.scripts]
-minerupress-export = "mineru_pipeline.cli:main"
-minerupress-fetch  = "mineru_pipeline.cli:fetch_main"
-mineru-export = "mineru_pipeline.cli:main"
-mineru-fetch  = "mineru_pipeline.cli:fetch_main"
+minerupress-export = "minerupress.cli:main"
+minerupress-fetch  = "minerupress.cli:fetch_main"
+mineru-export = "minerupress.cli:main"
+mineru-fetch  = "minerupress.cli:fetch_main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["mineru_pipeline*", "minerupress*"]
+include = ["minerupress*"]

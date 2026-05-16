@@ -17,13 +17,13 @@
 
 ## 主要目录
 
-- `mineru_pipeline/`: Python 包源码。
-- `mineru_pipeline/core.py`: 导出引擎，负责章节边界查找、item -> Markdown、图片复制和插件 hook 调用。
-- `mineru_pipeline/loader.py`: 解析 `book.yml`，组装 `BookConfig`、插件实例和可选 `APIConfig`。
-- `mineru_pipeline/cli.py`: `minerupress-export` 和 `minerupress-fetch` 命令入口。
-- `mineru_pipeline/api_client.py`: MinerU Precise API v4 客户端，包含上传、轮询、下载和 PDF 分片。
-- `mineru_pipeline/fingerprint.py`: 对 `docs/` 下 Markdown 生成 SHA-256 指纹并输出差异。
-- `mineru_pipeline/plugins/`: 内置插件和 `ExportPlugin` 基类。
+- `minerupress/`: Python 包源码。
+- `minerupress/core.py`: 导出引擎，负责章节边界查找、item -> Markdown、图片复制和插件 hook 调用。
+- `minerupress/loader.py`: 解析 `book.yml`，组装 `BookConfig`、插件实例和可选 `APIConfig`。
+- `minerupress/cli.py`: `minerupress-export` 和 `minerupress-fetch` 命令入口。
+- `minerupress/api_client.py`: MinerU Precise API v4 客户端，包含上传、轮询、下载和 PDF 分片。
+- `minerupress/fingerprint.py`: 对 `docs/` 下 Markdown 生成 SHA-256 指纹并输出差异。
+- `minerupress/plugins/`: 内置插件和 `ExportPlugin` 基类。
 - `book_template/`: 新书模板，包含 `book.yml`、`mkdocs.yml`、`.env.example`、`Makefile`。
 
 ## 环境与安装
@@ -87,7 +87,7 @@ make serve
 轻量代码检查：
 
 ```bash
-python -m compileall mineru_pipeline
+python -m compileall minerupress
 ```
 
 导出相关改动后，如果本地有有效 `book.yml` 和 `resources/mineru/`：
@@ -100,7 +100,7 @@ mkdocs build --strict
 文档内容发生变化后可生成/比较指纹：
 
 ```bash
-python -m mineru_pipeline.fingerprint --docs-dir docs --out reports/fingerprints.json
+python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
 涉及 `minerupress-fetch` 或 `api_client.py` 的改动通常需要网络和 `MINERU_API_TOKEN`，不要擅自调用会上传 PDF 或消耗云端资源的命令，除非用户明确要求。
@@ -129,7 +129,7 @@ python -m mineru_pipeline.fingerprint --docs-dir docs --out reports/fingerprints
 
 ## 插件开发约定
 
-插件继承 `mineru_pipeline.plugins.base.ExportPlugin`，按需覆盖：
+插件继承 `minerupress.plugins.base.ExportPlugin`，按需覆盖：
 
 - `on_image(item, img_path) -> bool`: 返回 `False` 丢弃图片。
 - `on_text(item, text) -> str`: 处理文本、caption、alt 等。
@@ -138,9 +138,9 @@ python -m mineru_pipeline.fingerprint --docs-dir docs --out reports/fingerprints
 
 新增内置插件时：
 
-1. 放在 `mineru_pipeline/plugins/`。
+1. 放在 `minerupress/plugins/`。
 2. 在 `loader.py` 的 `_BUILTIN_PLUGINS` 注册短名。
-3. 如需公开导入，再更新 `mineru_pipeline/plugins/__init__.py` 或 `mineru_pipeline/__init__.py`。
+3. 如需公开导入，再更新 `minerupress/plugins/__init__.py` 或 `minerupress/__init__.py`。
 4. 更新 README 和模板里的 `book.yml` 注释。
 
 插件应尽量容错：缺可选依赖时警告并退化为 no-op，避免让普通导出流程崩掉。
@@ -156,7 +156,7 @@ python -m mineru_pipeline.fingerprint --docs-dir docs --out reports/fingerprints
 
 ## 当前仓库注意事项
 
-- 当前仓库没有专门的测试目录；修改后至少运行 `python -m compileall mineru_pipeline`。
+- 当前仓库没有专门的测试目录；修改后至少运行 `python -m compileall minerupress`。
 - `book_template/Makefile` 是给复制后的新书项目使用的，不代表根目录有 `make` 工作流。
 - `api_client.fetch()` 返回 `list[Path]`，顺序必须与原始 PDF chunk 顺序一致；`_do_fetch()` 会把这些目录改名为 `volume_uid_full` 或 `volume_uid_partN`，并清理同 UID 的旧 full/part 输出。
 - `core.export()` 会根据 UID 前缀在 `mineru_root` 下自动发现一个或多个分册目录，并按自然顺序顺推章节边界；改匹配逻辑时要避免破坏已有短前缀配置。

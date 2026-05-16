@@ -1,5 +1,5 @@
 """
-mineru_pipeline.loader
+minerupress.loader
 ~~~~~~~~~~~~~~~~~~~~~~
 Load a book.yml file into a BookConfig + plugin list.
 """
@@ -146,9 +146,9 @@ def _default_volume_uid(raw: dict) -> str:
 
 
 _BUILTIN_PLUGINS: dict[str, str] = {
-    "qr_filter":   "mineru_pipeline.plugins.qr_filter.QRFilterPlugin",
-    "cjk_spacing": "mineru_pipeline.plugins.cjk_spacing.CJKSpacingPlugin",
-    "cf_pages":    "mineru_pipeline.plugins.cf_pages.CloudflarePagesPlugin",
+    "qr_filter":   "minerupress.plugins.qr_filter.QRFilterPlugin",
+    "cjk_spacing": "minerupress.plugins.cjk_spacing.CJKSpacingPlugin",
+    "cf_pages":    "minerupress.plugins.cf_pages.CloudflarePagesPlugin",
 }
 
 
