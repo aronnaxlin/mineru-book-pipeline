@@ -203,9 +203,3 @@ This project stands on the shoulders of:
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
-
-License context:
-
-- MinerU currently describes its license as a MinerU Open Source License based on Apache 2.0 with additional conditions.
-- MkDocs is licensed under a BSD license.
-- This project uses Apache-2.0 for a permissive license with explicit patent terms while remaining compatible with the surrounding open-source ecosystem.
