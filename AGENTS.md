@@ -4,7 +4,7 @@
 
 ## 项目定位
 
-这是一个通用的 `MinerU -> MkDocs Material` 图书导出工具链。
+这是 **MineruPress**，一个通用的 `MinerU -> MkDocs Material` 图书发布工具链。
 
 核心流程：
 
@@ -20,7 +20,7 @@
 - `mineru_pipeline/`: Python 包源码。
 - `mineru_pipeline/core.py`: 导出引擎，负责章节边界查找、item -> Markdown、图片复制和插件 hook 调用。
 - `mineru_pipeline/loader.py`: 解析 `book.yml`，组装 `BookConfig`、插件实例和可选 `APIConfig`。
-- `mineru_pipeline/cli.py`: `mineru-export` 和 `mineru-fetch` 命令入口。
+- `mineru_pipeline/cli.py`: `minerupress-export` 和 `minerupress-fetch` 命令入口。
 - `mineru_pipeline/api_client.py`: MinerU Precise API v4 客户端，包含上传、轮询、下载和 PDF 分片。
 - `mineru_pipeline/fingerprint.py`: 对 `docs/` 下 Markdown 生成 SHA-256 指纹并输出差异。
 - `mineru_pipeline/plugins/`: 内置插件和 `ExportPlugin` 基类。
@@ -54,19 +54,19 @@ pip install -e ".[all]"
 本地 MinerU 输出导出：
 
 ```bash
-mineru-export book.yml
+minerupress-export book.yml
 ```
 
 云端 MinerU API 拉取并导出：
 
 ```bash
-mineru-fetch book.yml
+minerupress-fetch book.yml
 ```
 
 已有本地输出时补充拉取缺失分册：
 
 ```bash
-mineru-export --fetch book.yml
+minerupress-export --fetch book.yml
 ```
 
 模板书目录里可用的标准流水线：
@@ -93,7 +93,7 @@ python -m compileall mineru_pipeline
 导出相关改动后，如果本地有有效 `book.yml` 和 `resources/mineru/`：
 
 ```bash
-mineru-export book.yml
+minerupress-export book.yml
 mkdocs build --strict
 ```
 
@@ -103,7 +103,7 @@ mkdocs build --strict
 python -m mineru_pipeline.fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
-涉及 `mineru-fetch` 或 `api_client.py` 的改动通常需要网络和 `MINERU_API_TOKEN`，不要擅自调用会上传 PDF 或消耗云端资源的命令，除非用户明确要求。
+涉及 `minerupress-fetch` 或 `api_client.py` 的改动通常需要网络和 `MINERU_API_TOKEN`，不要擅自调用会上传 PDF 或消耗云端资源的命令，除非用户明确要求。
 
 涉及 `cf_pages` 的改动注意：插件会在 `CLOUDFLARE_API_TOKEN` 存在时执行 `mkdocs build` 和 `wrangler pages deploy`。本地验证时避免意外部署。
 
@@ -121,7 +121,7 @@ python -m mineru_pipeline.fingerprint --docs-dir docs --out reports/fingerprints
 
 `volume_uid` 是 MinerU 输出目录名的可匹配前缀，不一定是完整 UUID。单 PDF 自动拆分后会形成 `volume_uid_part1`、`volume_uid_part2` 等目录，章节仍使用同一个逻辑 `volume_uid`。章节边界可从 `title` 自动推导，支持 `第10章`、`附录A`、`Chapter 3`、`项目二`、`10.1` 等；只有 MinerU 标题异常或存在歧义时再写 `aliases`、`start_pattern` 或 `start_patterns`。
 
-可选 `api:` 块用于 `mineru-fetch`；`sources` 的 key 要与章节的 `volume_uid` 对应。
+可选 `api:` 块用于 `minerupress-fetch`；`sources` 的 key 要与章节的 `volume_uid` 对应。
 
 可选 `deploy:` 块供 `cf_pages` 插件读取；目标 Pages 项目不存在时插件会创建项目后重试部署。
 
@@ -161,4 +161,4 @@ python -m mineru_pipeline.fingerprint --docs-dir docs --out reports/fingerprints
 - `api_client.fetch()` 返回 `list[Path]`，顺序必须与原始 PDF chunk 顺序一致；`_do_fetch()` 会把这些目录改名为 `volume_uid_full` 或 `volume_uid_partN`，并清理同 UID 的旧 full/part 输出。
 - `core.export()` 会根据 UID 前缀在 `mineru_root` 下自动发现一个或多个分册目录，并按自然顺序顺推章节边界；改匹配逻辑时要避免破坏已有短前缀配置。
 - `core.export()` 每次都会重建 `docs/chapters/` 和 `docs/images/`，不要在这些目录里放手工维护的内容。
-- `skills/mineru-book-pipeline/` 是给外部 AI agent 发布/安装的 Skill，修改流水线行为后要同步更新其中的 `SKILL.md` 或 `references/`。
+- `skills/minerupress/` 是给外部 AI agent 发布/安装的 Skill，修改流水线行为后要同步更新其中的 `SKILL.md` 或 `references/`。

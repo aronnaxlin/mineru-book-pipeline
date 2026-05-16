@@ -3,16 +3,15 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mineru-book-pipeline"
+name = "minerupress"
 version = "0.1.0"
-description = "Generic MinerU → MkDocs Material pipeline with plugin support"
+description = "Turn MinerU output into publishable MkDocs Material book sites"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
-keywords = ["mineru", "mkdocs", "book", "pdf", "markdown", "agent"]
+keywords = ["mineru", "mkdocs", "book", "pdf", "markdown", "publishing", "agent"]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -32,9 +31,11 @@ cjk = ["pangu>=4.0.0"]
 all = ["opencv-python>=4.8.0", "pangu>=4.0.0"]
 
 [project.scripts]
+minerupress-export = "mineru_pipeline.cli:main"
+minerupress-fetch  = "mineru_pipeline.cli:fetch_main"
 mineru-export = "mineru_pipeline.cli:main"
 mineru-fetch  = "mineru_pipeline.cli:fetch_main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["mineru_pipeline*"]
+include = ["mineru_pipeline*", "minerupress*"]

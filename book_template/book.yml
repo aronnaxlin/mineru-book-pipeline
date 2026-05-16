@@ -1,6 +1,6 @@
 # book.yml — 新书配置文件，复制此模板并填写
-# 运行: mineru-export book.yml          （使用本地 MinerU 输出）
-# 运行: mineru-fetch   book.yml          （上传 PDF 到云端 API，再导出）
+# 运行: minerupress-export book.yml      （使用本地 MinerU 输出）
+# 运行: minerupress-fetch  book.yml      （上传 PDF 到云端 API，再导出）
 
 # MinerU 输出根目录（包含各分册子目录）
 mineru_root: resources/mineru
@@ -20,7 +20,7 @@ toc_max_page: 10
 allow_missing_boundaries: false
 
 # ── 可选：MinerU 云端 API ──────────────────────────────────────────────────
-# 填写此块后可用 mineru-fetch 直接上传 PDF，无需本地运行 MinerU。
+# 填写此块后可用 minerupress-fetch 直接上传 PDF，无需本地运行 MinerU。
 # 敏感值（token）推荐写在 .env 文件中，不要提交到 git。
 #
 # api:
@@ -35,7 +35,7 @@ allow_missing_boundaries: false
 # ──────────────────────────────────────────────────────────────────────────
 
 # ── 可选：Cloudflare Pages 部署 ────────────────────────────────────────────
-# 在 plugins 中加入 cf_pages 后，每次 mineru-export 完成会自动部署。
+# 在 plugins 中加入 cf_pages 后，每次 minerupress-export 完成会自动部署。
 # CLOUDFLARE_ACCOUNT_ID 和 CLOUDFLARE_API_TOKEN 写在 .env 中。
 #
 # deploy:

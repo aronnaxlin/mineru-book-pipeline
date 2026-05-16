@@ -2,6 +2,8 @@
 mineru_pipeline.cli
 ~~~~~~~~~~~~~~~~~~~
 Command-line entry points:
+  minerupress-export — convert local MinerU output to per-chapter Markdown
+  minerupress-fetch  — upload PDFs to MinerU cloud API, then export
   mineru-export  — convert local MinerU output to per-chapter Markdown
   mineru-fetch   — upload PDFs to MinerU cloud API, then export
 """
@@ -84,8 +86,8 @@ def _clear_existing_uid_outputs(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="mineru-export",
-        description="Export MinerU content_list.json to per-chapter Markdown.",
+        prog=Path(sys.argv[0]).name,
+        description="Export MinerU content_list.json to a MineruPress book site.",
     )
     parser.add_argument(
         "book_yml",
@@ -128,10 +130,10 @@ def main() -> None:
 
 
 def fetch_main() -> None:
-    """Entry point for `mineru-fetch`: fetch then export."""
+    """Entry point for `minerupress-fetch`: fetch then export."""
     parser = argparse.ArgumentParser(
-        prog="mineru-fetch",
-        description="Upload PDFs to MinerU cloud API, then export to Markdown.",
+        prog=Path(sys.argv[0]).name,
+        description="Upload PDFs to MinerU cloud API, then export a MineruPress book site.",
     )
     parser.add_argument(
         "book_yml",
@@ -159,7 +161,7 @@ def fetch_main() -> None:
     if api_cfg is None:
         print(
             "Error: book.yml has no 'api:' block. "
-            "Add api.token and api.sources to use mineru-fetch.",
+            "Add api.token and api.sources to use minerupress-fetch.",
             file=sys.stderr,
         )
         sys.exit(1)

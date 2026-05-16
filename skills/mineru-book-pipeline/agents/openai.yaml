@@ -1,4 +1,0 @@
-interface:
-  display_name: "MinerU Book Pipeline"
-  short_description: "Convert MinerU output into MkDocs books"
-  default_prompt: "Use $mineru-book-pipeline to configure, export, verify, and deploy a MinerU-to-MkDocs book pipeline."

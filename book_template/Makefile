@@ -6,9 +6,9 @@ REPORTS    := reports
 
 all: export lint fmt-check fingerprint build
 
-## export: Run mineru-export with book.yml
+## export: Run minerupress-export with book.yml
 export:
-	mineru-export book.yml
+	minerupress-export book.yml
 
 ## lint: Run markdownlint-cli2 on all docs
 lint:

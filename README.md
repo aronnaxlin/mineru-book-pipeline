@@ -1,15 +1,18 @@
-# mineru-book-pipeline
+# MineruPress
 
-An AI-friendly pipeline for turning [MinerU](https://github.com/opendatalab/MinerU) output into a clean [MkDocs](https://www.mkdocs.org/) Material book site.
+Turn MinerU output into a publishable online book.
 
-It is designed for repeatable book conversion work:
+MineruPress is an AI-friendly publishing pipeline for converting [MinerU](https://github.com/opendatalab/MinerU) parsing results into clean [MkDocs](https://www.mkdocs.org/) Material book sites. It is built for repeatable long-document work: textbooks, course handouts, internal manuals, training PDFs, and knowledge-base migrations.
+
+It helps you:
 
 - Export MinerU `*_content_list.json` into one Markdown file per chapter.
 - Treat split PDFs as one logical volume, so `javaweb_p1` and `javaweb_p2` can share `volume_uid: javaweb`.
 - Infer chapter boundaries from human titles such as `第10章`, `第十章`, `附录A`, `Chapter 3`, `项目二`, or `10.1`.
+- Preserve code blocks from MinerU `code_body` and render literal HTML/XML tags correctly in prose.
 - Rebuild generated `docs/chapters/` and `docs/images/` on each export to avoid stale files.
 - Filter images, add CJK spacing, fingerprint output, and optionally deploy to Cloudflare Pages.
-- Ship a reusable agent Skill for other AI agents.
+- Ship a reusable Agent Skill so other AI agents can run the same publishing workflow.
 
 ## Install
 
@@ -49,7 +52,7 @@ Prepare:
 Export and preview:
 
 ```bash
-mineru-export book.yml
+minerupress-export book.yml
 mkdocs serve
 ```
 
@@ -58,6 +61,8 @@ Build strictly:
 ```bash
 mkdocs build --strict
 ```
+
+The legacy commands `mineru-export` and `mineru-fetch` are still available for compatibility.
 
 ## Cloud MinerU API
 
@@ -70,7 +75,7 @@ MINERU_API_TOKEN=...
 Then configure `api.sources` in `book.yml` and run:
 
 ```bash
-mineru-fetch book.yml
+minerupress-fetch book.yml
 ```
 
 Large PDFs are split automatically before upload. The fetched output is renamed to `volume_uid_full` or `volume_uid_partN`, and stale outputs for that same `volume_uid` are cleaned before export.
@@ -119,7 +124,7 @@ chapters:
 All relative paths are resolved from the directory containing `book.yml`, so this works from any current working directory:
 
 ```bash
-mineru-export /path/to/my-book/book.yml
+minerupress-export /path/to/my-book/book.yml
 ```
 
 ## Plugins
@@ -134,7 +139,7 @@ Custom plugins subclass `ExportPlugin`:
 
 ```python
 from pathlib import Path
-from mineru_pipeline import ExportPlugin
+from minerupress import ExportPlugin
 
 class MyPlugin(ExportPlugin):
     def on_image(self, item: dict, img_path: Path | None) -> bool:
@@ -162,16 +167,16 @@ plugins:
 This repository includes an installable Skill for AI agents:
 
 ```text
-skills/mineru-book-pipeline/
+skills/minerupress/
 ```
 
 Install from a GitHub repository:
 
 ```bash
-npx skills add <owner/repo> --skill mineru-book-pipeline
+npx skills add <owner/repo> --skill minerupress
 ```
 
-Use it when an agent needs to configure, export, validate, troubleshoot, or deploy a MinerU-to-MkDocs book pipeline.
+Use it when an agent needs to configure, export, validate, troubleshoot, or deploy a MinerU-to-MkDocs book publishing workflow.
 
 ## Repository Scope
 
@@ -192,13 +197,13 @@ Keep real book projects in their own workspace copied from `book_template/`.
 
 ## Acknowledgements
 
-This project stands on the shoulders of:
+MineruPress stands on the shoulders of:
 
 - [MinerU](https://github.com/opendatalab/MinerU), for document parsing and `content_list.json` output.
 - [MkDocs](https://www.mkdocs.org/), for the static documentation framework.
 - [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/), for the book-ready theme.
 - [Cloudflare Pages](https://pages.cloudflare.com/), for simple static site hosting.
-- [Vercel Agent Skills](https://vercel.com/docs/agent-resources/skills), for the Skill packaging model used by `skills/mineru-book-pipeline/`.
+- [Vercel Agent Skills](https://vercel.com/docs/agent-resources/skills), for the Skill packaging model used by `skills/minerupress/`.
 
 ## License
 
