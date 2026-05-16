@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -5,4 +6,39 @@ __pycache__/
 dist/
 build/
 .venv/
+.venv*/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# macOS
 .DS_Store
+
+# Environment / secrets — never commit these
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Per-book artifacts in the repo root (a book lives in its own directory,
+# created from book_template/. The repo root is the toolchain only.)
+/book.yml
+/mkdocs.yml
+/docs/
+/site/
+/.temp/
+/resources/
+/*_part*.pdf
+
+# Wrangler
+.wrangler/
+
+# Reports
+reports/
+
+# Local editor/tooling
+.idea/
+.vscode/

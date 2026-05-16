@@ -47,3 +47,16 @@ class ExportPlugin:
         modified) list.
         """
         return lines
+
+    # ------------------------------------------------------------------
+    # Export lifecycle hooks
+    # ------------------------------------------------------------------
+
+    def on_export_done(self, docs_out: Path) -> None:
+        """
+        Called once after all chapters have been written.
+
+        Use for post-export actions such as deployment.
+        docs_out is the Path passed as BookConfig.docs_out.
+        """
+        pass

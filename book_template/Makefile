@@ -37,6 +37,7 @@ build:
 ## deploy: Build and deploy to Cloudflare Pages
 ## Set PAGES_PROJECT to your project name before running.
 deploy: build
+	-npx wrangler pages project create $(PAGES_PROJECT) --production-branch main
 	npx wrangler pages deploy site --project-name $(PAGES_PROJECT) --branch main --commit-dirty=true
 
 ## clean: Remove generated docs/chapters, docs/images, site/, reports/

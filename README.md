@@ -1,114 +1,211 @@
 # mineru-book-pipeline
 
-通用 MinerU → MkDocs Material 导出工具链，支持插件扩展。
+An AI-friendly pipeline for turning [MinerU](https://github.com/opendatalab/MinerU) output into a clean [MkDocs](https://www.mkdocs.org/) Material book site.
 
-## 安装
+It is designed for repeatable book conversion work:
+
+- Export MinerU `*_content_list.json` into one Markdown file per chapter.
+- Treat split PDFs as one logical volume, so `javaweb_p1` and `javaweb_p2` can share `volume_uid: javaweb`.
+- Infer chapter boundaries from human titles such as `第10章`, `第十章`, `附录A`, `Chapter 3`, `项目二`, or `10.1`.
+- Rebuild generated `docs/chapters/` and `docs/images/` on each export to avoid stale files.
+- Filter images, add CJK spacing, fingerprint output, and optionally deploy to Cloudflare Pages.
+- Ship a reusable agent Skill for other AI agents.
+
+## Install
 
 ```bash
-pip install -e ".[all]"   # 包含 QR 过滤和 CJK 间距插件
+pip install -e ".[all]"
 ```
 
-依赖项：
+Optional dependency groups:
 
-| 功能 | 额外依赖 |
-|---|---|
-| QR 过滤 | `opencv-python` |
-| CJK 间距 | `pangu` |
-| 两者都要 | `pip install -e ".[all]"` |
+| Extra | Adds | Used by |
+|---|---|---|
+| `qr` | `opencv-python` | QR image filtering |
+| `cjk` | `pangu` | Chinese/ASCII spacing |
+| `all` | both | common book export setup |
 
-## 新书快速开始
+MkDocs itself is used by generated book projects. Install it in your book environment if it is not already available:
 
 ```bash
-# 1. 复制模板
-cp -r book_template/ ~/dev/my-new-book/
-cd ~/dev/my-new-book/
+pip install mkdocs mkdocs-material
+```
 
-# 2. 填写 book.yml（章节、volume_uid、start_pattern）
-# 3. 填写 mkdocs.yml（site_name、nav）
+## Quick Start
 
-# 4. 导出
+Create a new book workspace:
+
+```bash
+cp -r book_template/ ~/dev/my-book/
+cd ~/dev/my-book/
+```
+
+Prepare:
+
+1. Put MinerU output directories under `resources/mineru/`.
+2. Edit `book.yml`.
+3. Edit `mkdocs.yml` site metadata and navigation.
+
+Export and preview:
+
+```bash
 mineru-export book.yml
-
-# 5. 预览
 mkdocs serve
 ```
 
-## book.yml 格式
+Build strictly:
 
-```yaml
-mineru_root: resources/mineru   # MinerU 输出根目录
-docs_out: docs                  # MkDocs docs/ 目录
-toc_max_page: 10                # 目录页最大页码（之前的标题匹配忽略）
-
-plugins:
-  - qr_filter                   # 内置：过滤课程二维码
-  - cjk_spacing                 # 内置：中英文间距
-  # - mypackage.MyPlugin        # 自定义：dotted import 路径
-
-chapters:
-  - slug: ch01-intro            # 输出文件名（不含 .md）
-    title: 第1章 绪论           # 显示标题
-    volume_uid: 73d5b3e7        # MinerU 输出目录名中的 UUID 前缀
-    start_pattern: "^第\\s*1\\s*章"  # 匹配章节首行的正则
+```bash
+mkdocs build --strict
 ```
 
-`volume_uid` 只需填 UUID 的前 8 位，pipeline 会自动在 `mineru_root` 下匹配。
+## Cloud MinerU API
 
-## 自定义插件
+For API-based parsing, copy `book_template/.env.example` to `.env` and fill secrets locally:
 
-继承 `ExportPlugin`，覆盖需要的钩子：
+```bash
+MINERU_API_TOKEN=...
+```
+
+Then configure `api.sources` in `book.yml` and run:
+
+```bash
+mineru-fetch book.yml
+```
+
+Large PDFs are split automatically before upload. The fetched output is renamed to `volume_uid_full` or `volume_uid_partN`, and stale outputs for that same `volume_uid` are cleaned before export.
+
+## Configuration
+
+Minimal `book.yml`:
+
+```yaml
+mineru_root: resources/mineru
+docs_out: docs
+volume_uid: javaweb
+toc_max_page: 10
+allow_missing_boundaries: false
+
+plugins:
+  - qr_filter
+  - cjk_spacing
+
+chapters:
+  - slug: ch01-overview
+    title: 第1章 Web开发概述
+  - slug: appendix-a
+    title: 附录A 部分习题的解答
+```
+
+Boundary matching:
+
+- Prefer `title`; the exporter derives common boundary patterns automatically.
+- Use `aliases` when MinerU headings use alternate titles.
+- Use `start_pattern` or `start_patterns` only when you need exact regex control.
+- Keep `allow_missing_boundaries: false` in production. Use `--allow-missing-boundaries` only while diagnosing noisy OCR output.
+
+Example:
+
+```yaml
+chapters:
+  - slug: unit-01
+    title: 第一单元 Web 基础
+    aliases:
+      - Unit 1
+    start_patterns:
+      - "^第\\s*一\\s*单元"
+```
+
+All relative paths are resolved from the directory containing `book.yml`, so this works from any current working directory:
+
+```bash
+mineru-export /path/to/my-book/book.yml
+```
+
+## Plugins
+
+Built-in plugins:
+
+- `qr_filter`: drops small QR-code images with OpenCV.
+- `cjk_spacing`: inserts spacing between CJK and ASCII text with `pangu`, while protecting LaTeX spans.
+- `cf_pages`: builds with `mkdocs build --strict` and deploys to Cloudflare Pages. If the Pages project does not exist, it creates it and retries.
+
+Custom plugins subclass `ExportPlugin`:
 
 ```python
+from pathlib import Path
 from mineru_pipeline import ExportPlugin
 
 class MyPlugin(ExportPlugin):
-    def on_image(self, item: dict, img_path) -> bool:
-        # 返回 False 丢弃图片
+    def on_image(self, item: dict, img_path: Path | None) -> bool:
         return True
 
     def on_text(self, item: dict, text: str) -> str:
-        # 返回处理后的文本
-        return text.replace("旧词", "新词")
+        return text
 
     def on_chapter_done(self, slug: str, lines: list[str]) -> list[str]:
-        # 对整章做后处理
         return lines
+
+    def on_export_done(self, docs_out: Path) -> None:
+        pass
 ```
 
-在 `book.yml` 中引用：
+Then reference it from `book.yml`:
 
 ```yaml
 plugins:
   - mypackage.mymodule.MyPlugin
 ```
 
-## 内置插件
+## Agent Skill
 
-### QRFilterPlugin
+This repository includes an installable Skill for AI agents:
 
-用 OpenCV `QRCodeDetector.detect()` 检测二维码 finder pattern（不依赖解码成功）。
-`max_side` 参数控制最大边长阈值（默认 250px），超过此尺寸的图片不做检测。
-
-### CJKSpacingPlugin
-
-用 `pangu` 在中文和 ASCII 字符之间插入空格。
-`$...$` 和 `$$...$$` 内的 LaTeX 内容受保护，不会被插入空格。
-
-## 项目结构
-
+```text
+skills/mineru-book-pipeline/
 ```
-mineru_pipeline/
-├── core.py          # 导出引擎
-├── loader.py        # book.yml 解析器
-├── cli.py           # mineru-export 命令行入口
-├── fingerprint.py   # SHA-256 内容指纹
-└── plugins/
-    ├── base.py          # ExportPlugin 基类
-    ├── qr_filter.py     # QR 过滤插件
-    └── cjk_spacing.py   # CJK 间距插件
 
-book_template/
-├── book.yml         # 配置模板
-├── mkdocs.yml       # MkDocs Material 模板
-└── Makefile         # 标准流水线 targets
+Install from a GitHub repository:
+
+```bash
+npx skills add <owner/repo> --skill mineru-book-pipeline
 ```
+
+Use it when an agent needs to configure, export, validate, troubleshoot, or deploy a MinerU-to-MkDocs book pipeline.
+
+## Repository Scope
+
+This repository is the reusable toolchain and template. It should not commit a specific book's local artifacts.
+
+Ignored root-level book artifacts include:
+
+- `book.yml`
+- `mkdocs.yml`
+- `docs/`
+- `site/`
+- `.temp/`
+- `resources/`
+- `.env`
+- `.wrangler/`
+
+Keep real book projects in their own workspace copied from `book_template/`.
+
+## Acknowledgements
+
+This project stands on the shoulders of:
+
+- [MinerU](https://github.com/opendatalab/MinerU), for document parsing and `content_list.json` output.
+- [MkDocs](https://www.mkdocs.org/), for the static documentation framework.
+- [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/), for the book-ready theme.
+- [Cloudflare Pages](https://pages.cloudflare.com/), for simple static site hosting.
+- [Vercel Agent Skills](https://vercel.com/docs/agent-resources/skills), for the Skill packaging model used by `skills/mineru-book-pipeline/`.
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE).
+
+License context:
+
+- MinerU currently describes its license as a MinerU Open Source License based on Apache 2.0 with additional conditions.
+- MkDocs is licensed under a BSD license.
+- This project uses Apache-2.0 for a permissive license with explicit patent terms while remaining compatible with the surrounding open-source ecosystem.

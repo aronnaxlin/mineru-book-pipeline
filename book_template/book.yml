@@ -1,5 +1,6 @@
 # book.yml — 新书配置文件，复制此模板并填写
-# 运行: mineru-export book.yml
+# 运行: mineru-export book.yml          （使用本地 MinerU 输出）
+# 运行: mineru-fetch   book.yml          （上传 PDF 到云端 API，再导出）
 
 # MinerU 输出根目录（包含各分册子目录）
 mineru_root: resources/mineru
@@ -7,64 +8,82 @@ mineru_root: resources/mineru
 # MkDocs docs/ 目录
 docs_out: docs
 
-# 目录页最大页码，此页码之前的标题匹配会被忽略（避免把目录当章节边界）
+# 单本书或单个 PDF 的逻辑分册 UID。章节不写 volume_uid 时默认使用它。
+# 如果 MinerU API 自动拆分 PDF，导出的多个 part 仍归到这个 UID 下。
+volume_uid: 73d5b3e7
+
+# 目录页过滤阈值。仅在查找每个逻辑 UID 的第一个章节边界时，
+# 忽略 page_idx 小于该值的标题匹配；设为 0 可关闭过滤。
 toc_max_page: 10
 
-# 启用的插件（内置: qr_filter, cjk_spacing；也可填 dotted import 路径）
+# 默认严格模式：任一章节边界找不到就失败，避免静默生成错位章节。
+allow_missing_boundaries: false
+
+# ── 可选：MinerU 云端 API ──────────────────────────────────────────────────
+# 填写此块后可用 mineru-fetch 直接上传 PDF，无需本地运行 MinerU。
+# 敏感值（token）推荐写在 .env 文件中，不要提交到 git。
+#
+# api:
+#   token: ""                    # 留空则读取 MINERU_API_TOKEN 环境变量
+#   enable_formula: true
+#   enable_table: true
+#   model_version: vlm
+#   sources:                     # volume_uid前缀 → 本地 PDF 路径
+#     73d5b3e7: resources/pdfs/book.pdf
+#   # 单 PDF 超过 API 页数限制时会自动拆分成 73d5b3e7_part1、73d5b3e7_part2...
+#   # 章节仍可全部使用同一个 volume_uid，不需要手工维护 part UID。
+# ──────────────────────────────────────────────────────────────────────────
+
+# ── 可选：Cloudflare Pages 部署 ────────────────────────────────────────────
+# 在 plugins 中加入 cf_pages 后，每次 mineru-export 完成会自动部署。
+# CLOUDFLARE_ACCOUNT_ID 和 CLOUDFLARE_API_TOKEN 写在 .env 中。
+#
+# deploy:
+#   pages_project: my-book       # 留空则读取 PAGES_PROJECT 环境变量
+#   site_dir: site
+#   branch: main
+#   wrangler_cmd: npx wrangler
+# ──────────────────────────────────────────────────────────────────────────
+
+# 启用的插件（内置: qr_filter, cjk_spacing, cf_pages；也可填 dotted import 路径）
 plugins:
   - qr_filter
   - cjk_spacing
+  # - cf_pages
 
 # 章节列表
-# volume_uid: MinerU 输出目录名中包含的 UUID 前缀（8位即可）
-# start_pattern: 匹配章节首行标题的正则表达式
+# volume_uid: 可省略；省略时使用顶层 volume_uid。多 PDF/多逻辑卷时再逐章填写。
+# title 会自动推导章节边界，支持“第1章”“附录A”“Chapter 1”“项目二”“10.1”等格式。
+# 若 MinerU 识别出的标题与 title 不同，可用 aliases 或 start_patterns 补充。
 chapters:
   - slug: ch01-overview
     title: 第1章 概述
-    volume_uid: 73d5b3e7
-    start_pattern: "^第\\s*1\\s*章\\s*概述"
 
   - slug: ch02-physical
     title: 第2章 物理层
-    volume_uid: 73d5b3e7
-    start_pattern: "^第\\s*2\\s*章\\s*物理层"
 
   - slug: ch03-datalink
     title: 第3章 数据链路层
-    volume_uid: 73d5b3e7
-    start_pattern: "^第\\s*3\\s*章\\s*数据链路层"
 
   - slug: ch04-network
     title: 第4章 网络层
-    volume_uid: 73d5b3e7
-    start_pattern: "^第\\s*4\\s*章\\s*网络层"
 
   - slug: ch05-transport
     title: 第5章 运输层
-    volume_uid: a61ffdaa
-    start_pattern: "^第\\s*5\\s*章\\s*运输层"
 
   - slug: ch06-application
     title: 第6章 应用层
-    volume_uid: a61ffdaa
-    start_pattern: "^第\\s*6\\s*章\\s*应用层"
 
   - slug: ch07-security
     title: 第7章 网络安全
-    volume_uid: a61ffdaa
-    start_pattern: "^第\\s*7\\s*章\\s*网络安全"
 
   - slug: ch08-av
     title: 第8章 互联网上的音频/视频服务
-    volume_uid: a61ffdaa
-    start_pattern: "^第\\s*8\\s*章"
 
   - slug: ch09-wireless
     title: 第9章 无线网络和移动网络
-    volume_uid: b4a4de61
-    start_pattern: "^第\\s*9\\s*章"
 
   - slug: appendix-a
     title: 附录A 部分习题的解答
-    volume_uid: b4a4de61
-    start_pattern: "^附录\\s*A"
+    aliases:
+      - Appendix A

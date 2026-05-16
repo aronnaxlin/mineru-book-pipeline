@@ -6,9 +6,24 @@ build-backend = "setuptools.build_meta"
 name = "mineru-book-pipeline"
 version = "0.1.0"
 description = "Generic MinerU → MkDocs Material pipeline with plugin support"
+readme = "README.md"
 requires-python = ">=3.11"
+license = "Apache-2.0"
+keywords = ["mineru", "mkdocs", "book", "pdf", "markdown", "agent"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Documentation",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
 dependencies = [
     "pyyaml>=6.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "pypdf>=4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -18,6 +33,7 @@ all = ["opencv-python>=4.8.0", "pangu>=4.0.0"]
 
 [project.scripts]
 mineru-export = "mineru_pipeline.cli:main"
+mineru-fetch  = "mineru_pipeline.cli:fetch_main"
 
 [tool.setuptools.packages.find]
 where = ["."]
