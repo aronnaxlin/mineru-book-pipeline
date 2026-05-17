@@ -1,29 +1,14 @@
 # MineruPress
 
-Turn MinerU output into a publishable MkDocs Material book site.
+把 MinerU 解析结果整理成可以发布的 MkDocs Material 图书站点。
 
-Input: MinerU `content_list.json` + images  
-Output: chapter-split MkDocs Material site  
-Best for: scanned textbooks, course notes, internal manuals
+MineruPress 适合处理扫描教材、课程讲义、内部手册和长 PDF 知识库迁移：输入 MinerU 生成的 `content_list.json` 与图片，输出按章节拆分的 Markdown、图片资源和可直接部署的静态站点。
 
-[Live example](https://software-testing-methods.pages.dev): a textbook site generated from a PDF through MinerU and MineruPress.
+![《软件测试方法和技术》示例站点](docs/assets/software-testing-methods-site.png)
 
-```text
-PDF / MinerU API
-      |
-      v
-resources/mineru/*_content_list.json + images
-      |
-      v
-docs/chapters/*.md + docs/images/
-      |
-      v
-MkDocs Material site
-```
+英文 README：[docs/README_EN.md](docs/README_EN.md)
 
-MineruPress 是一条面向长文档发布的通用工具链，适合教材、讲义、内部手册、培训资料和知识库迁移这类 `PDF -> MinerU -> Markdown -> MkDocs` 场景。它把书籍差异收敛到 `book.yml` 和插件里，让导出、校验、增量修正、部署都能重复执行。
-
-## 一分钟开始
+## 快速开始
 
 复制模板就是一本新书的起点：
 
@@ -34,27 +19,39 @@ minerupress-fetch book.yml
 mkdocs serve
 ```
 
-如果你已经有本地 MinerU 输出，把它放到 `resources/mineru/` 后运行：
+如果已经有本地 MinerU 输出，把它放到 `resources/mineru/` 后运行：
 
 ```bash
 minerupress-export book.yml
 mkdocs serve
 ```
 
-## 主要能力
+标准链路如下：
 
-- 把 MinerU 的 `*_content_list.json` 导出为按章节拆分的 Markdown。
-- 把同一本书的多个物理分片当成一个逻辑 `volume_uid` 连续处理。
-- 根据章节标题自动推导边界，支持 `第10章`、`第十章`、`附录A`、`Chapter 3`、`项目二`、`10.1` 等常见格式。
-- 保留 MinerU `code_body` 代码块，普通正文中的 HTML/XML 标签会自动转义。
-- 每次导出都会重建 `docs/chapters/` 和 `docs/images/`，避免旧文件残留。
-- 提供 `minerupress-headings`，从 MinerU 输出中分析大标题并生成章节配置草稿。
-- 支持图片过滤、中文与西文间距修正、Markdown 指纹比对，以及可选的 Cloudflare Pages 部署。
-- 附带可复用的 AI Agent Skill，方便其他 agent 按同一流程处理图书项目。
+```text
+PDF 或 MinerU API
+        |
+        v
+resources/mineru/*_content_list.json 与图片
+        |
+        v
+docs/chapters/*.md 与 docs/images/
+        |
+        v
+MkDocs Material 图书站点
+```
+
+## 解决什么问题
+
+- 长 PDF 经 MinerU 解析后，结果通常是一堆 JSON、图片和松散文本；MineruPress 把它们整理成稳定的图书工程。
+- 一本书可以被拆成多个 PDF 分片，导出时仍按同一个逻辑分册连续匹配章节。
+- 章节边界优先由标题自动推导，减少手写正则；遇到目录页、附录、项目制教材和中英文标题时也能更稳。
+- 导出过程可重复执行，每次重建章节 Markdown 和图片目录，避免旧文件混进新站点。
+- 插件系统负责二维码过滤、中西文间距、导出后部署等差异化工作，不把某本书的规则写死进核心代码。
 
 ## 安装
 
-当前推荐从 GitHub 开发安装：
+当前推荐从 GitHub 安装开发版：
 
 ```bash
 git clone https://github.com/aronnaxlin/minerupress.git
@@ -62,54 +59,48 @@ cd minerupress
 pip install -e ".[all]"
 ```
 
-可选依赖组：
-
-| Extra | 增加依赖 | 用途 |
-|---|---|---|
-| `qr` | `opencv-python` | `qr_filter` 二维码图片过滤 |
-| `cjk` | `pangu` | `cjk_spacing` 中西文间距处理 |
-| `all` | 两者都装 | 常见完整环境 |
-
-如果你的图书项目还没有安装 MkDocs：
+要求 Python `>=3.11`。如果你的图书工作区还没有 MkDocs：
 
 ```bash
 pip install mkdocs mkdocs-material
 ```
 
-要求 Python `>=3.11`。
+可选依赖：
 
-## 快速开始
+| 依赖组 | 依赖 | 用途 |
+|---|---|---|
+| `qr` | `opencv-python` | `qr_filter` 二维码图片过滤 |
+| `cjk` | `pangu` | `cjk_spacing` 中西文间距处理 |
+| `all` | 上面两组 | 常见完整环境 |
 
-1. 复制模板创建一本新书工作区：
+## 新书工作区
+
+建议每本书使用独立目录，不要直接把某本书的生成物放进工具链仓库。
 
 ```bash
 cp -r book_template/ ~/dev/my-book/
 cd ~/dev/my-book/
 ```
 
-2. 准备输入：
+模板里已经包含：
 
-- 把 MinerU 输出目录放到 `resources/mineru/`
-- 编辑 `book.yml`
-- 编辑 `mkdocs.yml` 的站点信息与导航
+- `book.yml`：书籍配置、章节列表、MinerU API 和部署配置。
+- `mkdocs.yml`：MkDocs Material 站点配置。
+- `.env.example`：敏感环境变量示例。
+- `Makefile`：常用导出、校验、构建命令。
 
-3. 导出并本地预览：
+常见工作区结构：
 
-```bash
-minerupress-export book.yml
-mkdocs serve
+```text
+my-book/
+  book.yml
+  mkdocs.yml
+  resources/mineru/
+  docs/
+  site/
 ```
 
-4. 严格构建校验：
-
-```bash
-mkdocs build --strict
-```
-
-兼容旧命令：
-
-- `mineru-export`
-- `mineru-fetch`
+`resources/`、`docs/`、`site/` 通常是某本书自己的输入和输出，不应提交到 MineruPress 工具链仓库；如果你在独立图书仓库中维护成品站点，再按那个仓库的规则决定是否纳入版本控制。
 
 ## 常用命令
 
@@ -119,7 +110,7 @@ mkdocs build --strict
 minerupress-export book.yml
 ```
 
-先上传 PDF 到 MinerU 云端，再导出：
+上传 PDF 到 MinerU 云端，拉取结果并导出：
 
 ```bash
 minerupress-fetch book.yml
@@ -131,40 +122,25 @@ minerupress-fetch book.yml
 minerupress-export --fetch book.yml
 ```
 
-分析 MinerU 大标题并生成章节配置草稿：
+分析 MinerU 输出中的正文大标题，生成章节配置草稿：
 
 ```bash
 minerupress-headings resources/mineru --volume-uid javaweb --format yaml --body-only
 ```
 
-允许边界缺失并继续导出，仅建议排查问题时使用：
+严格构建站点：
 
 ```bash
-minerupress-export --allow-missing-boundaries book.yml
+mkdocs build --strict
 ```
 
-生成或比对指纹：
+生成或比对文档指纹：
 
 ```bash
 python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
-## 测试与 CI
-
-本地测试：
-
-```bash
-pip install -e ".[dev]"
-pytest
-```
-
-仓库已配置 GitHub Actions，在 Python 3.11 和 3.12 上运行 `compileall` 与 `pytest`。
-
-## 发布状态
-
-MineruPress 目前处于 `0.1.0` alpha 阶段，推荐使用 GitHub 开发安装。正式 Release 和 PyPI 分发还在准备中；发布前需要补齐版本标记、构建产物校验和发布凭据。
-
-## `book.yml` 最小示例
+## `book.yml` 示例
 
 ```yaml
 mineru_root: resources/mineru
@@ -186,12 +162,12 @@ chapters:
 
 边界匹配建议：
 
-- 优先只写 `title`
-- MinerU 标题有别名时加 `aliases`
-- 必须手工控正则时再写 `start_pattern` 或 `start_patterns`
-- 生产环境保持 `allow_missing_boundaries: false`
+- 优先只写 `title`。
+- MinerU 标题存在别名时加 `aliases`。
+- 必须手工控制正则时再写 `start_pattern` 或 `start_patterns`。
+- 正式导出保持 `allow_missing_boundaries: false`，避免章节错位后继续生成。
 
-所有相对路径都以 `book.yml` 所在目录为基准解析，所以可以从任意当前目录执行：
+所有相对路径都以 `book.yml` 所在目录为基准解析，所以可以从任意目录执行：
 
 ```bash
 minerupress-export /path/to/my-book/book.yml
@@ -224,19 +200,28 @@ class MyPlugin(ExportPlugin):
         pass
 ```
 
-然后在 `book.yml` 中引用 dotted path：
+然后在 `book.yml` 中引用：
 
 ```yaml
 plugins:
   - mypackage.mymodule.MyPlugin
 ```
 
-## 文档索引
+## 测试与发布状态
 
-更详细的中文文档见 `docs/guide/`：
+本地验证：
+
+```bash
+pip install -e ".[dev]"
+pytest
+python -m compileall minerupress
+```
+
+仓库已配置 GitHub Actions，在 Python 3.11 和 3.12 上运行 `compileall` 与 `pytest`。MineruPress 目前处于 `0.1.0` alpha 阶段，推荐使用 GitHub 开发安装；正式 Release 和 PyPI 分发仍在准备中。
+
+## 文档
 
 - [总览与术语](docs/index.md)
-- [English README](docs/README_EN.md)
 - [快速开始](docs/guide/getting-started.md)
 - [实战工作流](docs/guide/workflow-run-a-book.md)
 - [配置详解](docs/guide/configuration.md)
@@ -246,38 +231,34 @@ plugins:
 - [校验、指纹与排障](docs/guide/validation-and-troubleshooting.md)
 - [发布与分发](docs/guide/release.md)
 
-## Agent Skill
+## Agent Skill 安装
 
-这个仓库内置了一个给使用者安装的 Skill：
+仓库内置了可给外部 agent 安装的 Skill：
 
 ```text
 skills/minerupress/
 ```
 
-如果你想在自己的 agent 环境里获取它，可以从仓库安装：
+使用者可以从这个仓库获取：
 
 ```bash
 npx skills add aronnaxlin/minerupress --skill minerupress
 ```
 
-安装后，适合交给 AI agent 做配置、抓取、导出、验证、排障和部署。
-
-如果你是在维护这个仓库本身，`skills/minerupress/` 目录就是要一起发布出去的 Skill 内容，不是给仓库作者自己“获取”的命令示例。
+安装后，agent 可以按同一套流程处理图书配置、MinerU 抓取、章节导出、构建校验、排障和 Cloudflare Pages 部署。维护工具链时，如果流程行为改变，也要同步更新 `skills/minerupress/`。
 
 ## 仓库边界
 
-这个仓库是通用工具链，不应提交某本书的本地生成物或敏感信息。通常不应纳入版本控制的内容包括：
+这个仓库是通用工具链，`docs/` 用来放项目文档，`book_template/` 用来放新书模板。某本书的本地工作区、MinerU 输出、站点构建结果和敏感配置应保持隔离，不要提交到这里。
 
-- `book.yml`
-- `mkdocs.yml`
-- `docs/`
-- `site/`
+通常不要提交：
+
+- 本地图书工作区目录
 - `resources/`
+- `site/`
 - `reports/`
 - `.env`
 - `.wrangler/`
-
-当前仓库里历史上用于本地调试的一套书稿工作区已迁到 `local_book_workspace/`，并默认加入 `.gitignore`。真实图书项目建议复制 `book_template/` 到独立工作区中维护。
 
 ## 致谢
 
@@ -287,6 +268,6 @@ npx skills add aronnaxlin/minerupress --skill minerupress
 - [Cloudflare Pages](https://pages.cloudflare.com/)
 - [Vercel Agent Skills](https://vercel.com/docs/agent-resources/skills)
 
-## License
+## 许可证
 
 Apache License 2.0，见 [LICENSE](LICENSE)。
