@@ -131,6 +131,7 @@ Guidance:
 - [Plugins](guide/plugins.md)
 - [Cloud API and Deploy](guide/cloud-api-and-deploy.md)
 - [Validation and Troubleshooting](guide/validation-and-troubleshooting.md)
+- [Release and Distribution](guide/release.md)
 
 ## Repository Scope
 

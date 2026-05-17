@@ -232,7 +232,7 @@ def _classify_heading(
             text=text,
             kind="heading",
             label="",
-        title=_clean_title(text),
+            title=_clean_title(text),
             start_pattern="",
             is_toc_like=is_toc,
             confidence="low",
