@@ -23,6 +23,24 @@ use it as the starting point for `book.yml`, `mkdocs.yml`, `.env.example`, and
 generated `site/` out of the toolchain repository unless the user explicitly
 asks to commit a book project.
 
+## Preferred Workflow
+
+Default to a two-stage, isolated workflow when the user starts from a raw PDF:
+
+1. Create an isolated book workspace rather than reusing the toolchain root.
+2. Copy the source PDF into that workspace under `resources/pdfs/`.
+3. Run a first pass with `minerupress-fetch` to obtain MinerU output.
+4. Inspect `*_content_list.json` to confirm the real chapter boundary shape.
+5. Refine `book.yml` chapter boundaries and rerun `minerupress-export`.
+6. Verify with `mkdocs build --strict` and optionally fingerprints.
+
+This is the safest default because:
+
+- automatic PDF splitting writes chunk files next to the source PDF
+- cloud-drive or protected paths may fail with `PermissionError`
+- table-of-contents pages often need one refinement pass before chapter boundaries are stable
+- generated `docs/`, `site/`, `reports/`, and `resources/mineru/` stay isolated per book
+
 ## Workflow
 
 1. Inspect the book workspace:
@@ -30,13 +48,21 @@ asks to commit a book project.
    - Check `resources/mineru/` for one or more MinerU output directories containing `*_content_list.json`.
    - Treat `docs/chapters/`, `docs/images/`, `site/`, `reports/`, and `.env` as generated or local-only unless the user explicitly asks otherwise.
 
-2. Configure `book.yml`:
+2. If the user starts from a raw PDF instead of existing MinerU output:
+   - Create or use an isolated workspace for that specific book.
+   - Copy the PDF into `resources/pdfs/` inside the workspace instead of referencing a cloud-drive or protected external path directly.
+   - Write a minimal `api:` block and a temporary placeholder chapter.
+   - Run `minerupress-fetch book.yml` first to fetch MinerU output and get an initial export.
+
+3. Configure `book.yml`:
    - Use a top-level `volume_uid` for a logical book/PDF. Split outputs such as `javaweb_p1` and `javaweb_p2` can share `volume_uid: javaweb`.
    - Prefer chapter `title` plus `slug`; omit `start_pattern` unless the generated boundary matcher is ambiguous.
    - Add `aliases` or `start_patterns` only when MinerU headings differ from the canonical title.
    - Keep `allow_missing_boundaries: false` for production runs.
+   - After the first fetch, inspect `*_content_list.json` and replace placeholder chapters with the real chapter list.
+   - If the table of contents page causes false matches, prefer a display-only `title` plus an exact `start_pattern` such as `^第\\s*1\\s*章$`.
 
-3. Run export:
+4. Run export:
 
 ```bash
 minerupress-export book.yml
@@ -50,7 +76,7 @@ minerupress-fetch book.yml
 
 Legacy commands `mineru-export` and `mineru-fetch` are also available for existing projects.
 
-4. Verify:
+5. Verify:
 
 ```bash
 mkdocs build --strict
@@ -95,6 +121,18 @@ chapters:
 
 Only use `--allow-missing-boundaries` while diagnosing bad MinerU output. A successful production run should find every configured chapter boundary.
 
+If TOC lines such as `第1章 引论 …… 3` are matched before the real body heading,
+switch to exact body-heading regexes:
+
+```yaml
+chapters:
+  - slug: ch01-introduction
+    title: 引论
+    start_pattern: "^第\\s*1\\s*章$"
+```
+
+This avoids the generated title matcher from locking onto the table of contents.
+
 ## Generated Outputs
 
 Each export rebuilds:
@@ -119,3 +157,5 @@ as real HTML. Raw `table_body` HTML is preserved as table markup.
 ## References
 
 Read `references/book-yml.md` when you need a compact configuration reference or examples.
+For the end-to-end isolated-book workflow, also read the project docs page
+`docs/guide/workflow-run-a-book.md` in this repository.

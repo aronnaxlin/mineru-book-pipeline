@@ -1,0 +1,149 @@
+# 配置详解
+
+`book.yml` 是 MineruPress 的核心配置入口。导出器会把书籍特定差异尽量收敛到这里，而不是写死到代码里。
+
+## 顶层字段
+
+最小示例：
+
+```yaml
+mineru_root: resources/mineru
+docs_out: docs
+volume_uid: javaweb
+toc_max_page: 10
+allow_missing_boundaries: false
+
+plugins:
+  - qr_filter
+  - cjk_spacing
+
+chapters:
+  - slug: ch01-overview
+    title: 第1章 Web开发概述
+```
+
+字段说明：
+
+- `mineru_root`：MinerU 输出根目录，默认 `resources/mineru`。
+- `docs_out`：导出到 MkDocs 的文档目录，默认 `docs`。
+- `volume_uid`：顶层默认逻辑分册 UID。章节未单独设置时继承它。
+- `toc_max_page`：首次查找章节边界时跳过前几页目录页；`0` 表示不跳过。
+- `allow_missing_boundaries`：默认 `false`。任何章节边界缺失都会失败。
+- `plugins`：插件列表，可以写内置短名或自定义插件 dotted import 路径。
+- `chapters`：章节列表，至少要有 `slug` 和 `title`。
+
+## 章节字段
+
+每个章节支持：
+
+```yaml
+chapters:
+  - slug: ch01-overview
+    title: 第1章 Web开发概述
+    volume_uid: javaweb
+    toc_max_page: 0
+    aliases:
+      - 第一章 Web开发概述
+      - Chapter 1
+    start_pattern: "^第\\s*1\\s*章"
+    start_patterns:
+      - "^Chapter\\s*1\\b"
+```
+
+字段说明：
+
+- `slug`：输出文件名，不带 `.md`。
+- `title`：章节显示标题，也是默认边界推导来源。
+- `volume_uid`：可选。多逻辑卷时按章节覆盖顶层默认 UID。
+- `toc_max_page`：可选。单章覆盖全局目录页过滤阈值。
+- `aliases`：章节标题别名，用于补充自动边界推导。
+- `start_pattern`：单条正则，兼容旧配置。
+- `start_patterns`：多条正则，适合复杂边界控制。
+
+## 章节边界推导规则
+
+如果只写 `title`，MineruPress 会自动生成一组边界匹配模式。当前支持的标题风格包括：
+
+- `第10章 JavaScript`
+- `第十章 JavaScript`
+- `附录A 习题答案`
+- `Chapter 3 Arrays`
+- `Unit 1`
+- `项目二 尚硅谷书城`
+- `10.1 JavaScript 简介`
+
+推荐优先级：
+
+1. 只写 `title`
+2. 标题存在别名时加 `aliases`
+3. 只有在 OCR 或标题异常时再写 `start_pattern` / `start_patterns`
+
+## 关于 `volume_uid`
+
+`volume_uid` 匹配的是目录名前缀，不要求完整 UUID。比如：
+
+```text
+resources/mineru/
+├── javaweb_part1/
+├── javaweb_part2/
+└── javaweb_part3/
+```
+
+只要章节使用：
+
+```yaml
+volume_uid: javaweb
+```
+
+导出器就会把这些物理目录按自然顺序拼接成一个逻辑分册来寻找边界和导出内容。
+
+## `api:` 配置
+
+如果要直接调用 MinerU 云端 API：
+
+```yaml
+api:
+  token: ""
+  enable_formula: true
+  enable_table: true
+  model_version: vlm
+  sources:
+    javaweb: resources/pdfs/javaweb.pdf
+```
+
+说明：
+
+- `token` 留空时会读取 `MINERU_API_TOKEN`
+- `sources` 的 key 需要和章节使用的 `volume_uid` 对应
+- 相对路径同样按 `book.yml` 所在目录解析
+
+## `deploy:` 配置
+
+启用 `cf_pages` 插件时，可以配置：
+
+```yaml
+deploy:
+  pages_project: my-book
+  site_dir: site
+  branch: main
+  wrangler_cmd: npx wrangler
+```
+
+说明：
+
+- `pages_project` 为空时会回退到环境变量 `PAGES_PROJECT`
+- `site_dir` 默认为 `site`
+- `branch` 默认为 `main`
+- `wrangler_cmd` 支持自定义可执行命令
+
+## 路径解析规则
+
+MineruPress 不依赖当前工作目录。`book.yml` 中所有相对路径都会先相对 `book.yml` 所在目录解析，再转成绝对路径。
+
+这包括：
+
+- `mineru_root`
+- `docs_out`
+- `api.sources`
+
+这个规则让 CI、本地 shell、AI agent 在不同工作目录下运行时都更稳定。

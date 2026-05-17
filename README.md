@@ -1,88 +1,109 @@
 # MineruPress
 
-Turn MinerU output into a publishable online book.
+把 MinerU 的解析结果转换成可发布的 MkDocs Material 在线图书。
 
-MineruPress is an AI-friendly publishing pipeline for converting [MinerU](https://github.com/opendatalab/MinerU) parsing results into clean [MkDocs](https://www.mkdocs.org/) Material book sites. It is built for repeatable long-document work: textbooks, course handouts, internal manuals, training PDFs, and knowledge-base migrations.
+MineruPress 是一条面向长文档发布的通用工具链，适合教材、讲义、内部手册、培训资料和知识库迁移这类 `PDF -> MinerU -> Markdown -> MkDocs` 场景。它把书籍差异收敛到 `book.yml` 和插件里，让导出、校验、增量修正、部署都能重复执行。
 
-It helps you:
+## 主要能力
 
-- Export MinerU `*_content_list.json` into one Markdown file per chapter.
-- Treat split PDFs as one logical volume, so `javaweb_p1` and `javaweb_p2` can share `volume_uid: javaweb`.
-- Infer chapter boundaries from human titles such as `第10章`, `第十章`, `附录A`, `Chapter 3`, `项目二`, or `10.1`.
-- Preserve code blocks from MinerU `code_body` and render literal HTML/XML tags correctly in prose.
-- Rebuild generated `docs/chapters/` and `docs/images/` on each export to avoid stale files.
-- Filter images, add CJK spacing, fingerprint output, and optionally deploy to Cloudflare Pages.
-- Ship a reusable Agent Skill so other AI agents can run the same publishing workflow.
+- 把 MinerU 的 `*_content_list.json` 导出为按章节拆分的 Markdown。
+- 把同一本书的多个物理分片当成一个逻辑 `volume_uid` 连续处理。
+- 根据章节标题自动推导边界，支持 `第10章`、`第十章`、`附录A`、`Chapter 3`、`项目二`、`10.1` 等常见格式。
+- 保留 MinerU `code_body` 代码块，普通正文中的 HTML/XML 标签会自动转义。
+- 每次导出都会重建 `docs/chapters/` 和 `docs/images/`，避免旧文件残留。
+- 支持图片过滤、中文与西文间距修正、Markdown 指纹比对，以及可选的 Cloudflare Pages 部署。
+- 附带可复用的 AI Agent Skill，方便其他 agent 按同一流程处理图书项目。
 
-## Install
+## 安装
+
+推荐开发安装：
 
 ```bash
 pip install -e ".[all]"
 ```
 
-Optional dependency groups:
+可选依赖组：
 
-| Extra | Adds | Used by |
+| Extra | 增加依赖 | 用途 |
 |---|---|---|
-| `qr` | `opencv-python` | QR image filtering |
-| `cjk` | `pangu` | Chinese/ASCII spacing |
-| `all` | both | common book export setup |
+| `qr` | `opencv-python` | `qr_filter` 二维码图片过滤 |
+| `cjk` | `pangu` | `cjk_spacing` 中西文间距处理 |
+| `all` | 两者都装 | 常见完整环境 |
 
-MkDocs itself is used by generated book projects. Install it in your book environment if it is not already available:
+如果你的图书项目还没有安装 MkDocs：
 
 ```bash
 pip install mkdocs mkdocs-material
 ```
 
-## Quick Start
+要求 Python `>=3.11`。
 
-Create a new book workspace:
+## 快速开始
+
+1. 复制模板创建一本新书工作区：
 
 ```bash
 cp -r book_template/ ~/dev/my-book/
 cd ~/dev/my-book/
 ```
 
-Prepare:
+2. 准备输入：
 
-1. Put MinerU output directories under `resources/mineru/`.
-2. Edit `book.yml`.
-3. Edit `mkdocs.yml` site metadata and navigation.
+- 把 MinerU 输出目录放到 `resources/mineru/`
+- 编辑 `book.yml`
+- 编辑 `mkdocs.yml` 的站点信息与导航
 
-Export and preview:
+3. 导出并本地预览：
 
 ```bash
 minerupress-export book.yml
 mkdocs serve
 ```
 
-Build strictly:
+4. 严格构建校验：
 
 ```bash
 mkdocs build --strict
 ```
 
-The legacy commands `mineru-export` and `mineru-fetch` are still available for compatibility.
+兼容旧命令：
 
-## Cloud MinerU API
+- `mineru-export`
+- `mineru-fetch`
 
-For API-based parsing, copy `book_template/.env.example` to `.env` and fill secrets locally:
+## 常用命令
+
+本地 MinerU 输出导出：
 
 ```bash
-MINERU_API_TOKEN=...
+minerupress-export book.yml
 ```
 
-Then configure `api.sources` in `book.yml` and run:
+先上传 PDF 到 MinerU 云端，再导出：
 
 ```bash
 minerupress-fetch book.yml
 ```
 
-Large PDFs are split automatically before upload. The fetched output is renamed to `volume_uid_full` or `volume_uid_partN`, and stale outputs for that same `volume_uid` are cleaned before export.
+已有本地输出时，补抓缺失分册后再导出：
 
-## Configuration
+```bash
+minerupress-export --fetch book.yml
+```
 
-Minimal `book.yml`:
+允许边界缺失并继续导出，仅建议排查问题时使用：
+
+```bash
+minerupress-export --allow-missing-boundaries book.yml
+```
+
+生成或比对指纹：
+
+```bash
+python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+```
+
+## `book.yml` 最小示例
 
 ```yaml
 mineru_root: resources/mineru
@@ -102,44 +123,31 @@ chapters:
     title: 附录A 部分习题的解答
 ```
 
-Boundary matching:
+边界匹配建议：
 
-- Prefer `title`; the exporter derives common boundary patterns automatically.
-- Use `aliases` when MinerU headings use alternate titles.
-- Use `start_pattern` or `start_patterns` only when you need exact regex control.
-- Keep `allow_missing_boundaries: false` in production. Use `--allow-missing-boundaries` only while diagnosing noisy OCR output.
+- 优先只写 `title`
+- MinerU 标题有别名时加 `aliases`
+- 必须手工控正则时再写 `start_pattern` 或 `start_patterns`
+- 生产环境保持 `allow_missing_boundaries: false`
 
-Example:
-
-```yaml
-chapters:
-  - slug: unit-01
-    title: 第一单元 Web 基础
-    aliases:
-      - Unit 1
-    start_patterns:
-      - "^第\\s*一\\s*单元"
-```
-
-All relative paths are resolved from the directory containing `book.yml`, so this works from any current working directory:
+所有相对路径都以 `book.yml` 所在目录为基准解析，所以可以从任意当前目录执行：
 
 ```bash
 minerupress-export /path/to/my-book/book.yml
 ```
 
-## Plugins
+## 内置插件
 
-Built-in plugins:
+- `qr_filter`：使用 OpenCV 检测并过滤小尺寸二维码图片。
+- `cjk_spacing`：使用 `pangu` 为中西文混排补空格，并保护 LaTeX 公式片段。
+- `cf_pages`：执行 `mkdocs build --strict` 后部署到 Cloudflare Pages；项目不存在时会自动创建后重试。
 
-- `qr_filter`: drops small QR-code images with OpenCV.
-- `cjk_spacing`: inserts spacing between CJK and ASCII text with `pangu`, while protecting LaTeX spans.
-- `cf_pages`: builds with `mkdocs build --strict` and deploys to Cloudflare Pages. If the Pages project does not exist, it creates it and retries.
-
-Custom plugins subclass `ExportPlugin`:
+自定义插件继承 `ExportPlugin`：
 
 ```python
 from pathlib import Path
 from minerupress import ExportPlugin
+
 
 class MyPlugin(ExportPlugin):
     def on_image(self, item: dict, img_path: Path | None) -> bool:
@@ -155,56 +163,67 @@ class MyPlugin(ExportPlugin):
         pass
 ```
 
-Then reference it from `book.yml`:
+然后在 `book.yml` 中引用 dotted path：
 
 ```yaml
 plugins:
   - mypackage.mymodule.MyPlugin
 ```
 
+## 文档索引
+
+更详细的中文文档见 `docs/guide/`：
+
+- [总览与术语](docs/index.md)
+- [English README](docs/README_EN.md)
+- [快速开始](docs/guide/getting-started.md)
+- [配置详解](docs/guide/configuration.md)
+- [导出流程](docs/guide/export-pipeline.md)
+- [插件系统](docs/guide/plugins.md)
+- [云端抓取与部署](docs/guide/cloud-api-and-deploy.md)
+- [校验、指纹与排障](docs/guide/validation-and-troubleshooting.md)
+
 ## Agent Skill
 
-This repository includes an installable Skill for AI agents:
+这个仓库内置了一个给使用者安装的 Skill：
 
 ```text
 skills/minerupress/
 ```
 
-Install from a GitHub repository:
+如果你想在自己的 agent 环境里获取它，可以从仓库安装：
 
 ```bash
-npx skills add <owner/repo> --skill minerupress
+npx skills add aronnaxlin/minerupress --skill minerupress
 ```
 
-Use it when an agent needs to configure, export, validate, troubleshoot, or deploy a MinerU-to-MkDocs book publishing workflow.
+安装后，适合交给 AI agent 做配置、抓取、导出、验证、排障和部署。
 
-## Repository Scope
+如果你是在维护这个仓库本身，`skills/minerupress/` 目录就是要一起发布出去的 Skill 内容，不是给仓库作者自己“获取”的命令示例。
 
-This repository is the reusable toolchain and template. It should not commit a specific book's local artifacts.
+## 仓库边界
 
-Ignored root-level book artifacts include:
+这个仓库是通用工具链，不应提交某本书的本地生成物或敏感信息。通常不应纳入版本控制的内容包括：
 
 - `book.yml`
 - `mkdocs.yml`
 - `docs/`
 - `site/`
-- `.temp/`
 - `resources/`
+- `reports/`
 - `.env`
 - `.wrangler/`
 
-Keep real book projects in their own workspace copied from `book_template/`.
+当前仓库里历史上用于本地调试的一套书稿工作区已迁到 `local_book_workspace/`，并默认加入 `.gitignore`。真实图书项目建议复制 `book_template/` 到独立工作区中维护。
 
-## Acknowledgements
+## 致谢
 
-MineruPress stands on the shoulders of:
-
-- [MinerU](https://github.com/opendatalab/MinerU), for document parsing and `content_list.json` output.
-- [MkDocs](https://www.mkdocs.org/), for the static documentation framework.
-- [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/), for the book-ready theme.
-- [Cloudflare Pages](https://pages.cloudflare.com/), for simple static site hosting.
-- [Vercel Agent Skills](https://vercel.com/docs/agent-resources/skills), for the Skill packaging model used by `skills/minerupress/`.
+- [MinerU](https://github.com/opendatalab/MinerU)
+- [MkDocs](https://www.mkdocs.org/)
+- [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)
+- [Cloudflare Pages](https://pages.cloudflare.com/)
+- [Vercel Agent Skills](https://vercel.com/docs/agent-resources/skills)
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0，见 [LICENSE](LICENSE)。

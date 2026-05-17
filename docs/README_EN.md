@@ -1,0 +1,131 @@
+# MineruPress
+
+Turn MinerU output into publishable MkDocs Material book sites.
+
+MineruPress is a reusable `MinerU -> Markdown -> MkDocs` publishing pipeline for long-form documents such as textbooks, course handouts, internal manuals, training PDFs, and knowledge-base migrations. It keeps book-specific differences in `book.yml` and plugins so the workflow stays repeatable for both humans and AI agents.
+
+## What It Does
+
+- Export MinerU `*_content_list.json` into chapter-based Markdown files.
+- Treat multiple physical MinerU directories as one logical `volume_uid`.
+- Infer chapter boundaries from titles such as `第10章`, `附录A`, `Chapter 3`, `项目二`, or `10.1`.
+- Preserve MinerU `code_body` blocks and escape literal HTML/XML tags in prose.
+- Rebuild generated `docs/chapters/` and `docs/images/` on every export.
+- Support image filtering, CJK spacing, Markdown fingerprinting, and optional Cloudflare Pages deployment.
+
+## Install
+
+```bash
+pip install -e ".[all]"
+pip install mkdocs mkdocs-material
+```
+
+Optional dependency groups:
+
+| Extra | Adds | Used by |
+|---|---|---|
+| `qr` | `opencv-python` | QR image filtering |
+| `cjk` | `pangu` | Chinese/ASCII spacing |
+| `all` | both | common full setup |
+
+Python `>=3.11` is required.
+
+## Quick Start
+
+Create a separate book workspace from the template:
+
+```bash
+cp -r book_template/ ~/dev/my-book/
+cd ~/dev/my-book/
+```
+
+Then:
+
+1. Put MinerU output under `resources/mineru/`
+2. Edit `book.yml`
+3. Edit `mkdocs.yml`
+4. Export and preview
+
+```bash
+minerupress-export book.yml
+mkdocs serve
+```
+
+Strict build:
+
+```bash
+mkdocs build --strict
+```
+
+## Common Commands
+
+Local export:
+
+```bash
+minerupress-export book.yml
+```
+
+Fetch from MinerU cloud API, then export:
+
+```bash
+minerupress-fetch book.yml
+```
+
+Fetch first, then export from the main CLI:
+
+```bash
+minerupress-export --fetch book.yml
+```
+
+Fingerprint Markdown output:
+
+```bash
+python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+```
+
+## Minimal `book.yml`
+
+```yaml
+mineru_root: resources/mineru
+docs_out: docs
+volume_uid: javaweb
+toc_max_page: 10
+allow_missing_boundaries: false
+
+plugins:
+  - qr_filter
+  - cjk_spacing
+
+chapters:
+  - slug: ch01-overview
+    title: 第1章 Web开发概述
+```
+
+Guidance:
+
+- Prefer using `title` alone first.
+- Add `aliases` when MinerU headings differ slightly.
+- Use `start_pattern` or `start_patterns` only when exact regex control is needed.
+- Keep `allow_missing_boundaries: false` for production.
+
+## Built-in Plugins
+
+- `qr_filter`: removes small QR-code images with OpenCV.
+- `cjk_spacing`: inserts spacing between CJK and ASCII text with `pangu`, while protecting LaTeX spans.
+- `cf_pages`: runs `mkdocs build --strict` and deploys to Cloudflare Pages.
+
+## Documentation
+
+- [Chinese docs index](index.md)
+- [Getting Started](guide/getting-started.md)
+- [Configuration](guide/configuration.md)
+- [Export Pipeline](guide/export-pipeline.md)
+- [Plugins](guide/plugins.md)
+- [Cloud API and Deploy](guide/cloud-api-and-deploy.md)
+- [Validation and Troubleshooting](guide/validation-and-troubleshooting.md)
+
+## Repository Scope
+
+The repository root is the reusable toolchain, not a real book project. A previously used local book workspace has been moved to `local_book_workspace/` and added to `.gitignore`.
+
+For actual books, copy `book_template/` into a separate working directory and keep generated outputs, secrets, PDFs, and MinerU artifacts out of version control.

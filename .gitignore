@@ -23,15 +23,14 @@ htmlcov/
 *.pem
 *.key
 
-# Per-book artifacts in the repo root (a book lives in its own directory,
-# created from book_template/. The repo root is the toolchain only.)
+# Per-book artifacts in the repo root (the repo root is the toolchain only)
 /book.yml
 /mkdocs.yml
-/docs/
 /site/
 /.temp/
 /resources/
 /*_part*.pdf
+/local_book_workspace/
 
 # Wrangler
 .wrangler/
