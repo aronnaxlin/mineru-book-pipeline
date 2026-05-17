@@ -53,6 +53,7 @@ This is the safest default because:
    - Copy the PDF into `resources/pdfs/` inside the workspace instead of referencing a cloud-drive or protected external path directly.
    - Write a minimal `api:` block and a temporary placeholder chapter.
    - Run `minerupress-fetch book.yml` first to fetch MinerU output and get an initial export.
+   - Run `minerupress-headings resources/mineru --volume-uid <uid> --format yaml --body-only` to generate a chapter YAML draft.
 
 3. Configure `book.yml`:
    - Use a top-level `volume_uid` for a logical book/PDF. Split outputs such as `javaweb_p1` and `javaweb_p2` can share `volume_uid: javaweb`.
@@ -132,6 +133,15 @@ chapters:
 ```
 
 This avoids the generated title matcher from locking onto the table of contents.
+
+Use the headings helper before hand-writing many boundaries:
+
+```bash
+minerupress-headings resources/mineru --volume-uid javaweb --format report
+minerupress-headings resources/mineru --volume-uid javaweb --format yaml --body-only
+```
+
+The report marks TOC-looking candidates as `toc?` and body-looking candidates as `body`.
 
 ## Generated Outputs
 

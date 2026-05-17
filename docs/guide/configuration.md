@@ -78,6 +78,14 @@ chapters:
 2. 标题存在别名时加 `aliases`
 3. 只有在 OCR 或标题异常时再写 `start_pattern` / `start_patterns`
 
+从原始 MinerU 输出起步时，可以先让工具生成草稿：
+
+```bash
+minerupress-headings resources/mineru --volume-uid javaweb --format yaml --body-only
+```
+
+它会优先使用正文页上的独立章号行生成 `start_pattern`，降低目录页 TOC 误匹配的概率。
+
 ## 关于 `volume_uid`
 
 `volume_uid` 匹配的是目录名前缀，不要求完整 UUID。比如：

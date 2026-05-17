@@ -9,7 +9,7 @@ description = "Turn MinerU output into publishable MkDocs Material book sites"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
-keywords = ["mineru", "mkdocs", "book", "pdf", "markdown", "publishing", "agent"]
+keywords = ["mineru", "mkdocs", "book", "pdf", "markdown", "publishing", "agent", "headings"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
@@ -33,6 +33,7 @@ all = ["opencv-python>=4.8.0", "pangu>=4.0.0"]
 [project.scripts]
 minerupress-export = "minerupress.cli:main"
 minerupress-fetch  = "minerupress.cli:fetch_main"
+minerupress-headings = "minerupress.headings:main"
 mineru-export = "minerupress.cli:main"
 mineru-fetch  = "minerupress.cli:fetch_main"
 

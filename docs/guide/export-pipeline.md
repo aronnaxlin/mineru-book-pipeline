@@ -51,6 +51,14 @@
 
 这能最大限度避免章节错位后继续静默生成错误内容。
 
+如果你还没有稳定的章节配置，可以先运行：
+
+```bash
+minerupress-headings resources/mineru --volume-uid <uid> --format yaml --body-only
+```
+
+它会读取 MinerU 的 `text_level == 1` 条目，标注目录页候选和正文候选，并给出一份可继续编辑的 `chapters:` 草稿。
+
 ## Item 到 Markdown 的转换
 
 当前内置转换逻辑大致如下：

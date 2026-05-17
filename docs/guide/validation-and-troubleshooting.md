@@ -58,6 +58,15 @@ python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.jso
 - 用 `start_pattern: ^第\\s*1\\s*章$` 这类“正文页章号行”正则锁定真实边界
 - 必要时把 `title` 改成纯章节名，避免自动推导出的标题模式和目录页冲突
 
+可以先跑标题分析命令辅助判断：
+
+```bash
+minerupress-headings resources/mineru --format report
+minerupress-headings resources/mineru --format yaml --body-only
+```
+
+第一条用于看 TOC 和正文边界如何分布，第二条用于生成 `chapters:` 草稿。
+
 ## 导出的代码块不完整
 
 先确认源 `content_list.json` 里是否存在 `type: code` 项。MineruPress 会优先读取：

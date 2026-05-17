@@ -124,6 +124,25 @@ minerupress-fetch book.yml
 
 - `resources/mineru/*/*_content_list.json`
 
+现在可以先用内置命令做一轮自动分析：
+
+```bash
+minerupress-headings resources/mineru --volume-uid software-testing-methods
+```
+
+报告里会标出：
+
+- `toc?`：看起来像目录页里的条目
+- `body`：看起来像正文里的真实边界
+- `confidence`：当前判断的置信度
+- `start_pattern`：建议写入 `book.yml` 的边界正则
+
+如果只想拿可复制的章节配置草稿：
+
+```bash
+minerupress-headings resources/mineru --volume-uid software-testing-methods --format yaml --body-only
+```
+
 重点观察：
 
 - 目录页里的章标题长什么样
@@ -137,6 +156,7 @@ minerupress-fetch book.yml
 
 - `title` 用展示友好的纯章节名
 - `start_pattern` 精确锁定正文页章号行
+- 优先从 `minerupress-headings --format yaml --body-only` 的结果开始改
 
 例如：
 

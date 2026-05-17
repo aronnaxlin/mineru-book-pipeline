@@ -11,6 +11,7 @@ MineruPress is a reusable `MinerU -> Markdown -> MkDocs` publishing pipeline for
 - Infer chapter boundaries from titles such as `第10章`, `附录A`, `Chapter 3`, `项目二`, or `10.1`.
 - Preserve MinerU `code_body` blocks and escape literal HTML/XML tags in prose.
 - Rebuild generated `docs/chapters/` and `docs/images/` on every export.
+- Inspect MinerU headings and suggest `book.yml` chapter YAML with `minerupress-headings`.
 - Support image filtering, CJK spacing, Markdown fingerprinting, and optional Cloudflare Pages deployment.
 
 ## Install
@@ -83,6 +84,12 @@ Fingerprint Markdown output:
 python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
+Inspect heading candidates and generate chapter YAML:
+
+```bash
+minerupress-headings resources/mineru --volume-uid javaweb --format yaml --body-only
+```
+
 ## Minimal `book.yml`
 
 ```yaml
@@ -118,6 +125,7 @@ Guidance:
 
 - [Chinese docs index](index.md)
 - [Getting Started](guide/getting-started.md)
+- [End-to-End Workflow](guide/workflow-run-a-book.md)
 - [Configuration](guide/configuration.md)
 - [Export Pipeline](guide/export-pipeline.md)
 - [Plugins](guide/plugins.md)
