@@ -1,6 +1,6 @@
 ---
 name: minerupress
-description: Use when an AI agent needs to help a user or contributor work with MineruPress: install the released CLI, initialize a book workspace, choose exactly one source mode (`uploaded_result`, `official_api`, or `local_toolchain`), export MinerU results into MkDocs Material chapters, inspect heading boundaries, verify builds, troubleshoot generated output, develop plugins, or maintain the MineruPress repository. Trigger for MineruPress, minerupress, MinerU content_list.json, book.yml, `minerupress init`, `minerupress export`, `minerupress fetch`, `minerupress headings`, `minerupress fingerprint`, generated docs/chapters, or PDF-to-MkDocs book publishing automation.
+description: 'Use when an AI agent needs to help a user or contributor work with MineruPress: install the released CLI, initialize a book workspace, choose exactly one source mode (`uploaded_result`, `official_api`, or `local_toolchain`), export MinerU results into MkDocs Material chapters, inspect heading boundaries, verify builds, troubleshoot generated output, develop plugins, or maintain the MineruPress repository. Trigger for MineruPress, minerupress, MinerU content_list.json, book.yml, `minerupress init`, `minerupress export`, `minerupress fetch`, `minerupress headings`, `minerupress fingerprint`, generated docs/chapters, or PDF-to-MkDocs book publishing automation.'
 ---
 
 # MineruPress
