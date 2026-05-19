@@ -27,11 +27,8 @@ allow_missing_boundaries: false
 
 # ── 可选：本地 MinerU 工具链（外部安装，不内置在 MineruPress） ───────────────
 # 仅当 source: local_toolchain 时使用。
-# 需要你先按 MinerU 官方文档自行安装 `mineru` CLI，例如：
+# 需要你先按 MinerU 官方文档自行安装 `mineru` CLI。常见方式：
 #   uv pip install -U "mineru[all]"
-# 或：
-#   git clone https://github.com/opendatalab/MinerU.git
-#   cd MinerU && uv pip install -e .[all]
 #
 # local_toolchain:
 #   executable: mineru
@@ -41,8 +38,10 @@ allow_missing_boundaries: false
 #   sources:                    # volume_uid前缀 → 本地 PDF / 图片 / Office 文件或目录
 #     my-book: resources/pdfs/book.pdf
 #
-# 如果只想装轻量客户端或按需扩展，请参考：
+# 如果只想装轻量客户端、Docker/源码开发环境或按需扩展，请参考：
+# https://opendatalab.github.io/MinerU/quick_start/
 # https://opendatalab.github.io/MinerU/quick_start/extension_modules/
+# https://opendatalab.github.io/MinerU/usage/cli_tools/
 # ──────────────────────────────────────────────────────────────────────────
 
 # ── 可选：MinerU 云端 API ──────────────────────────────────────────────────

@@ -16,14 +16,14 @@ MineruPress is a reusable `MinerU -> Markdown -> MkDocs` publishing pipeline for
 
 ## Install
 
-Release-package install path:
+Recommended install path:
 
 ```bash
 pip install "minerupress[all]"
 pip install mkdocs mkdocs-material
 ```
 
-For an isolated CLI install after release:
+For an isolated CLI install:
 
 ```bash
 pipx install 'minerupress[all]'
@@ -60,9 +60,9 @@ cd ~/dev/my-book/
 Then:
 
 1. Preview the placeholder site
-2. Put MinerU output under `resources/mineru/`, or configure `source: official_api`
-3. Edit `book.yml`
-4. Export and preview
+2. Choose one `source` mode in `book.yml`
+3. Put MinerU output under `resources/mineru/`, or run `minerupress fetch book.yml` for API/local-toolchain sources
+4. Edit chapters, export, and preview
 
 ```bash
 mkdocs serve
@@ -117,6 +117,7 @@ The CLI now uses the unified `minerupress <subcommand>` form. Legacy wrappers su
 ## Minimal `book.yml`
 
 ```yaml
+source: uploaded_result
 mineru_root: resources/mineru
 docs_out: docs
 volume_uid: javaweb
@@ -134,6 +135,9 @@ chapters:
 
 Guidance:
 
+- The bundled template defaults to `source: uploaded_result`, which never uploads files or runs local parsing.
+- Use `source: official_api` with an `api:` block when starting from PDFs through the MinerU official API.
+- Use `source: local_toolchain` only when the user installed the MinerU CLI separately; MineruPress does not bundle MinerU.
 - Prefer using `title` alone first.
 - Add `aliases` when MinerU headings differ slightly.
 - Use `start_pattern` or `start_patterns` only when exact regex control is needed.
@@ -160,6 +164,4 @@ Guidance:
 
 ## Repository Scope
 
-The repository root is the reusable toolchain, not a real book project. A previously used local book workspace has been moved to `local_book_workspace/` and added to `.gitignore`.
-
-For actual books, create a separate working directory with `minerupress init <directory>` and keep generated outputs, secrets, PDFs, and MinerU artifacts out of version control.
+The repository root is the reusable toolchain, not a real book project. For actual books, create a separate working directory with `minerupress init <directory>` and keep generated outputs, secrets, PDFs, and MinerU artifacts out of version control unless that book workspace is intentionally versioned.

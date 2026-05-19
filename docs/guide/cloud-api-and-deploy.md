@@ -33,7 +33,7 @@ MINERU_API_TOKEN=...
 minerupress fetch book.yml
 ```
 
-如果你要在工具链仓库里临时跑一本书，推荐先建一个被忽略的隔离工作区，再在里面执行 `minerupress fetch`。完整示例见 [实战工作流](workflow-run-a-book.md)。
+不要直接在工具链仓库根目录跑真实书稿。推荐先创建独立工作区，再在里面执行 `minerupress fetch`。完整示例见 [实战工作流](workflow-run-a-book.md)。
 
 ## `minerupress fetch` 做了什么
 

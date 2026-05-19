@@ -79,9 +79,10 @@ Boundary controls:
 
 Practical guidance:
 
+- Choose one source mode per workspace. Do not configure `api:` and `local_toolchain:` as competing active workflows.
 - If starting from a raw PDF, do the first run in an isolated workspace.
 - Copy the PDF into the workspace before running `minerupress fetch`.
-- `local_toolchain` requires a separately installed MinerU CLI. Recommended official install docs:
+- `local_toolchain` requires a separately installed MinerU CLI. `uv pip install -U "mineru[all]"` is the common direct install path; use official docs for optional backends and CLI parameters:
   - https://opendatalab.github.io/MinerU/quick_start/
   - https://opendatalab.github.io/MinerU/quick_start/extension_modules/
   - https://opendatalab.github.io/MinerU/usage/cli_tools/

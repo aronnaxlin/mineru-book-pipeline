@@ -10,21 +10,23 @@ MineruPress 适合处理扫描教材、课程讲义、内部手册和长 PDF 知
 
 ## 快速开始
 
-复制模板就是一本新书的起点：
+先安装发布包，再用内置模板创建一本独立的新书工作区：
 
 ```bash
+pip install "minerupress[all]"
+pip install mkdocs mkdocs-material
 minerupress init my-book
 cd my-book
 mkdocs serve
 ```
 
-这会生成一份可以先预览的占位站点。准备好 MinerU 解析结果后，把它放到 `resources/mineru/` 并运行：
+模板默认使用 `source: uploaded_result`，也就是你已经有 MinerU 解析结果。把解析结果放到 `resources/mineru/` 后运行：
 
 ```bash
 minerupress export book.yml
 ```
 
-如果你是从 PDF 开始，先在 `book.yml` 里把 `source` 改成 `official_api`，配置 `api.sources`，再运行：
+如果你是从 PDF 开始，推荐在 `book.yml` 里选择 `source: official_api`，配置 `api.sources`，然后运行：
 
 ```bash
 minerupress fetch book.yml
@@ -60,14 +62,14 @@ MkDocs Material 图书站点
 
 要求 Python `>=3.11`。
 
-普通使用推荐直接安装发布包。首次 PyPI 发布完成后可用：
+普通使用推荐直接安装 PyPI 发布包：
 
 ```bash
 pip install "minerupress[all]"
 pip install mkdocs mkdocs-material
 ```
 
-如果你更希望把 CLI 隔离到独立环境，推荐在发布后使用：
+如果你更希望把 CLI 隔离到独立环境，推荐使用 `pipx`：
 
 ```bash
 pipx install 'minerupress[all]'
@@ -87,13 +89,7 @@ pipx upgrade minerupress
 pipx inject minerupress mkdocs mkdocs-material --include-apps
 ```
 
-如果你是在开发或修改工具链本身，再使用 GitHub 开发安装：
-
-```bash
-git clone https://github.com/aronnaxlin/minerupress.git
-cd minerupress
-pip install -e ".[all]"
-```
+如果你是在开发或修改工具链本身，而不是普通使用，请看后面的“贡献者开发”。
 
 可选依赖：
 
@@ -131,6 +127,22 @@ my-book/
 ```
 
 `resources/`、`docs/`、`site/` 通常是某本书自己的输入和输出，不应提交到 MineruPress 工具链仓库；如果你在独立图书仓库中维护成品站点，再按那个仓库的规则决定是否纳入版本控制。
+
+## 推荐工作流
+
+新项目只选一种来源模式，不要混用：
+
+| 起点 | `source` | 命令 | 说明 |
+|---|---|---|---|
+| 已有 MinerU 解析结果 | `uploaded_result` | `minerupress export book.yml` | 模板默认模式，把结果目录放进 `resources/mineru/` |
+| 只有 PDF，想走云端 | `official_api` | `minerupress fetch book.yml` | 使用 MinerU 官方 API，抓取后会自动导出 |
+| 只有 PDF，想本机解析 | `local_toolchain` | `minerupress fetch book.yml` | 调用你单独安装的 `mineru` CLI，MineruPress 不内置 MinerU |
+
+稳定跑书通常分两轮：
+
+1. 先准备来源，拿到 `resources/mineru/`。
+2. 用 `minerupress headings` 看真实标题结构，修好 `chapters`。
+3. 再执行 `minerupress export book.yml` 和 `mkdocs build --strict`。
 
 ## 常用命令
 
@@ -173,7 +185,7 @@ minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ## `book.yml` 示例
 
 ```yaml
-source: official_api
+source: uploaded_result
 mineru_root: resources/mineru
 docs_out: docs
 volume_uid: javaweb
@@ -193,25 +205,17 @@ chapters:
 
 来源选择：
 
-- `official_api`：使用 `api:` 配置走 MinerU 官方 API。新模板默认就是这个模式。
+- `uploaded_result`：直接读取 `mineru_root` 下已有的 MinerU 结果目录。新模板默认使用这个模式，因为它不会触发上传、下载或本机解析。
+- `official_api`：使用 `api:` 配置走 MinerU 官方 API，适合从 PDF 开始。
 - `local_toolchain`：调用你单独安装的 `mineru` CLI。MineruPress 不内置 MinerU 依赖，只做外部适配。
-- `uploaded_result`：直接读取 `mineru_root` 下已有的 MinerU 结果目录。
 
-如果你选择 `local_toolchain`，请先按 MinerU 官方说明单独安装，例如：
+如果你选择 `local_toolchain`，请先按 MinerU 官方说明单独安装。常见方式是：
 
 ```bash
 uv pip install -U "mineru[all]"
 ```
 
-或从源码安装：
-
-```bash
-git clone https://github.com/opendatalab/MinerU.git
-cd MinerU
-uv pip install -e .[all]
-```
-
-MinerU 官方文档还提供了按需扩展安装和轻量客户端说明：
+本地 MinerU 是可选外部工具，不会随 MineruPress 安装。按需扩展、轻量客户端、CLI 参数和源码开发方式请以 MinerU 官方文档为准：
 
 - [Quick Start](https://opendatalab.github.io/MinerU/quick_start/)
 - [Extension Modules Installation Guide](https://opendatalab.github.io/MinerU/quick_start/extension_modules/)
@@ -273,12 +277,19 @@ plugins:
   - mypackage.mymodule.MyPlugin
 ```
 
-## 测试与发布状态
+## 贡献者开发
+
+如果你要修改 MineruPress 自身，而不是只用它跑书，再 clone 仓库并做开发安装：
+
+```bash
+git clone https://github.com/aronnaxlin/minerupress.git
+cd minerupress
+pip install -e ".[dev]"
+```
 
 本地验证：
 
 ```bash
-pip install -e ".[dev]"
 pytest
 python -m compileall minerupress
 ```

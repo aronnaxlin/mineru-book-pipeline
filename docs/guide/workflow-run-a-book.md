@@ -1,6 +1,6 @@
 # 实战工作流
 
-这一页把“一本新的 PDF 从零跑成站点”的完整流程沉淀下来，基于真实跑书过程整理，目标是可复用、可隔离、适合人手执行，也适合 AI agent 重复执行。
+这一页把“一本新的 PDF 从零跑成站点”的完整流程沉淀下来。它采用 `source: official_api` 作为示例；如果你已有 MinerU 输出，请看 [快速开始](getting-started.md) 的 `uploaded_result` 路线；如果你要本机解析，请看 [配置详解](configuration.md) 的 `local_toolchain` 路线。
 
 ## 适用场景
 
@@ -77,6 +77,7 @@ MINERU_API_TOKEN=...
 第一轮不要急着把所有章节都填完。推荐先用最小配置把 MinerU 结果拉下来：
 
 ```yaml
+source: official_api
 mineru_root: resources/mineru
 docs_out: docs
 volume_uid: software-testing-methods

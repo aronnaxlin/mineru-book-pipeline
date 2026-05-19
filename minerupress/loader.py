@@ -53,7 +53,7 @@ def load_book_config(
 
     book.yml schema
     ---------------
-    source: official_api                 # optional, default for new configs
+    source: uploaded_result              # optional; default when omitted
     mineru_root: resources/mineru          # optional, default shown
     docs_out: docs                         # optional
     volume_uid: 73d5b3e7                   # optional default for chapters

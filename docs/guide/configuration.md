@@ -7,7 +7,7 @@
 最小示例：
 
 ```yaml
-source: official_api
+source: uploaded_result
 mineru_root: resources/mineru
 docs_out: docs
 volume_uid: javaweb
@@ -25,7 +25,7 @@ chapters:
 
 字段说明：
 
-- `source`：来源类型，可选 `official_api`、`local_toolchain`、`uploaded_result`。新模板默认 `official_api`。
+- `source`：来源类型，可选 `uploaded_result`、`official_api`、`local_toolchain`。新模板默认 `uploaded_result`。
 - `mineru_root`：MinerU 输出根目录，默认 `resources/mineru`。
 - `docs_out`：导出到 MkDocs 的文档目录，默认 `docs`。
 - `volume_uid`：顶层默认逻辑分册 UID。章节未单独设置时继承它。
@@ -87,6 +87,16 @@ minerupress headings resources/mineru --volume-uid javaweb --format yaml --body-
 ```
 
 它会优先使用正文页上的独立章号行生成 `start_pattern`，降低目录页 TOC 误匹配的概率。
+
+## `source` 选择
+
+每个工作区推荐只选择一种来源模式：
+
+- `uploaded_result`：已有 MinerU 输出，直接读取 `mineru_root` 下的结果目录。运行 `minerupress export book.yml`。
+- `official_api`：从 PDF 通过 MinerU 官方 API 获取解析结果。配置 `api:` 后运行 `minerupress fetch book.yml`。
+- `local_toolchain`：从 PDF、图片或 Office 文件调用你单独安装的本地 `mineru` CLI。配置 `local_toolchain:` 后运行 `minerupress fetch book.yml`。
+
+`minerupress export --fetch book.yml` 是便捷入口，会先按当前 `source` 准备来源，再导出；普通文档里优先使用更清楚的 `fetch` 或 `export` 两步。
 
 ## 关于 `volume_uid`
 
@@ -155,15 +165,7 @@ local_toolchain:
 uv pip install -U "mineru[all]"
 ```
 
-或：
-
-```bash
-git clone https://github.com/opendatalab/MinerU.git
-cd MinerU
-uv pip install -e .[all]
-```
-
-更多按需安装说明见：
+MinerU 的安装方式、扩展后端和 CLI 参数以官方文档为准：
 
 - [MinerU Quick Start](https://opendatalab.github.io/MinerU/quick_start/)
 - [MinerU Extension Modules](https://opendatalab.github.io/MinerU/quick_start/extension_modules/)

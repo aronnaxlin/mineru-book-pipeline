@@ -6,7 +6,7 @@
 - 推荐安装 `mkdocs` 和 `mkdocs-material`
 - 如果要用二维码过滤或中西文间距处理，安装对应可选依赖
 
-推荐在发布版可用后这样安装：
+推荐直接安装 PyPI 发布包：
 
 ```bash
 pip install "minerupress[all]"
@@ -44,9 +44,9 @@ mkdocs serve
 - `.env.example`：环境变量示例
 - `Makefile`：常用命令包装
 
-## 准备输入数据
+## 选择输入来源
 
-本地导出场景下，把 MinerU 的输出目录放到：
+新书工作区只选择一种来源。模板默认是 `source: uploaded_result`，适合已经有 MinerU 解析结果的情况：
 
 ```text
 resources/mineru/
@@ -59,12 +59,20 @@ resources/mineru/
 
 如果同一个逻辑分册被拆成多个物理目录，也没关系。只要它们目录名前缀都能匹配到同一个 `volume_uid`，导出器就会按自然顺序接起来处理。
 
+如果你只有 PDF，可以改用下面两种之一：
+
+- `source: official_api`：配置 `api.sources` 后运行 `minerupress fetch book.yml`，由 MinerU 官方 API 解析。
+- `source: local_toolchain`：先单独安装 MinerU 的 `mineru` CLI，再配置 `local_toolchain.sources` 后运行 `minerupress fetch book.yml`。
+
+本地 MinerU 工具链是可选外部依赖，MineruPress 不会内置或自动安装它。
+
 ## 第一次导出
 
 1. 编辑 `book.yml`
-2. 按章节填写 `slug` 和 `title`
-3. 准备 MinerU 输出或配置抓取来源
-4. 运行导出
+2. 选择一种 `source`
+3. 准备 MinerU 输出，或通过 `minerupress fetch book.yml` 生成输出
+4. 按章节填写 `slug` 和 `title`
+5. 运行导出
 
 ```bash
 minerupress export book.yml
@@ -91,13 +99,13 @@ mkdocs serve
 minerupress export book.yml
 ```
 
-已有 API 配置时，先抓取再导出：
+`official_api` 或 `local_toolchain` 模式下，先准备来源再导出：
 
 ```bash
 minerupress fetch book.yml
 ```
 
-已有部分本地输出，希望先补抓再导出：
+如果希望从导出命令里顺手准备来源：
 
 ```bash
 minerupress export --fetch book.yml

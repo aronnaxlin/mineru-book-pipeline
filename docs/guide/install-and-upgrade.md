@@ -13,7 +13,7 @@
 
 ## 普通安装：`pip`
 
-最直接的方式是安装发布包。首次 PyPI 发布完成后可用：
+最直接的方式是安装 PyPI 发布包：
 
 ```bash
 pip install "minerupress[all]"
@@ -40,7 +40,7 @@ pip uninstall minerupress
 
 ## 推荐 CLI 安装：`pipx`
 
-如果你希望 CLI 独立于当前 Python 项目环境，推荐在发布后使用 `pipx`：
+如果你希望 CLI 独立于当前 Python 项目环境，推荐使用 `pipx`：
 
 ```bash
 pipx install 'minerupress[all]'
@@ -107,15 +107,7 @@ pip install mkdocs mkdocs-material
 uv pip install -U "mineru[all]"
 ```
 
-或：
-
-```bash
-git clone https://github.com/opendatalab/MinerU.git
-cd MinerU
-uv pip install -e .[all]
-```
-
-更多安装模式见：
+MinerU 的按需扩展、轻量客户端、Docker、源码开发安装和 CLI 参数会随官方版本变化，更多安装模式见：
 
 - [MinerU Quick Start](https://opendatalab.github.io/MinerU/quick_start/)
 - [MinerU Extension Modules](https://opendatalab.github.io/MinerU/quick_start/extension_modules/)
@@ -136,8 +128,19 @@ minerupress export --help
 ```bash
 minerupress init my-book
 cd my-book
-minerupress export book.yml
 mkdocs serve
+```
+
+模板默认 `source: uploaded_result`。已有 MinerU 输出时，把结果放到 `resources/mineru/` 后执行：
+
+```bash
+minerupress export book.yml
+```
+
+只有 PDF 时，先在 `book.yml` 里选择 `official_api` 或 `local_toolchain`，再执行：
+
+```bash
+minerupress fetch book.yml
 ```
 
 如果你是维护者，准备首次正式发版时再看：

@@ -1,109 +1,135 @@
 ---
 name: minerupress
-description: Use when an AI agent needs to turn uploaded MinerU results, a separately installed local MinerU CLI, or MinerU official API results into a publishable MkDocs Material book site with chapter splitting, image filtering, CJK spacing, strict validation, and optional Cloudflare Pages deployment. Trigger for tasks involving MineruPress, minerupress, MinerU content_list.json, book.yml, `minerupress export`, `minerupress fetch`, `minerupress headings`, `minerupress fingerprint`, mineru-export, mineru-fetch, generated docs/chapters, or PDF-to-MkDocs book publishing automation.
+description: Use when an AI agent needs to help a user or contributor work with MineruPress: install the released CLI, initialize a book workspace, choose exactly one source mode (`uploaded_result`, `official_api`, or `local_toolchain`), export MinerU results into MkDocs Material chapters, inspect heading boundaries, verify builds, troubleshoot generated output, develop plugins, or maintain the MineruPress repository. Trigger for MineruPress, minerupress, MinerU content_list.json, book.yml, `minerupress init`, `minerupress export`, `minerupress fetch`, `minerupress headings`, `minerupress fingerprint`, generated docs/chapters, or PDF-to-MkDocs book publishing automation.
 ---
 
 # MineruPress
 
-Use this skill to configure, run, verify, and troubleshoot the MineruPress publishing pipeline for MinerU -> MkDocs Material book sites.
+Use this skill to support MineruPress as a user-facing publishing tool and as a contributor-maintained Python package.
 
-## Install The Toolchain
+## Audience Split
 
-If the current machine does not already have the project, install it first:
+For ordinary users, prefer the released package and an isolated book workspace:
+
+```bash
+pip install "minerupress[all]"
+pip install mkdocs mkdocs-material
+minerupress init my-book
+cd my-book
+```
+
+For contributors changing MineruPress itself, use the repository checkout:
 
 ```bash
 git clone https://github.com/aronnaxlin/minerupress.git
 cd minerupress
-pip install -e ".[all]"
+pip install -e ".[dev]"
 ```
 
-For a new book workspace, run `minerupress init <directory>` outside the
-toolchain repo or use the bundled template as the starting point for `book.yml`,
-`mkdocs.yml`, `.env.example`, and `Makefile`. Keep real PDFs, MinerU output,
-`.env`, generated `docs/`, and generated `site/` out of the toolchain
-repository unless the user explicitly asks to commit a book project.
+Do not make users clone the toolchain repo just to run a book. The bundled template is copied with `minerupress init <directory>` from the installed package.
 
-## Preferred Workflow
+## Source Modes
 
-Default to a two-stage, isolated workflow when the user starts from a raw PDF:
+Choose exactly one source mode per book workspace:
 
-1. Create an isolated book workspace rather than reusing the toolchain root.
-2. Copy the source PDF into that workspace under `resources/pdfs/`.
-3. Set `source: official_api` and run a first pass with `minerupress fetch` to obtain MinerU output.
-4. Inspect `*_content_list.json` to confirm the real chapter boundary shape.
-5. Refine `book.yml` chapter boundaries and rerun `minerupress export`.
-6. Verify with `mkdocs build --strict` and optionally fingerprints.
+- `uploaded_result`: The user already has MinerU output under `resources/mineru/`. This is the bundled template default and has no network or local parsing side effects.
+- `official_api`: The user starts from PDFs and wants MinerU official API parsing. Requires `api.sources` and `MINERU_API_TOKEN`.
+- `local_toolchain`: The user starts from PDFs, images, Office files, or a directory and already installed MinerU's `mineru` CLI separately.
 
-This is the safest default because:
+MineruPress must not bundle MinerU or silently install it. For `local_toolchain`, point users to MinerU official installation and CLI docs, with `uv pip install -U "mineru[all]"` as the common install path and official docs as the authority for optional backends and parameters.
 
-- automatic PDF splitting writes chunk files next to the source PDF
-- cloud-drive or protected paths may fail with `PermissionError`
-- table-of-contents pages often need one refinement pass before chapter boundaries are stable
-- generated `docs/`, `site/`, `reports/`, and `resources/mineru/` stay isolated per book
+## Preferred User Workflow
 
-## Workflow
+1. Create or enter an isolated book workspace with `minerupress init <dir>`.
+2. Choose one `source` in `book.yml`.
+3. Prepare source data:
+   - For `uploaded_result`, put MinerU output directories under `resources/mineru/`.
+   - For `official_api`, put PDFs under `resources/pdfs/`, configure `api.sources`, then run `minerupress fetch book.yml`.
+   - For `local_toolchain`, install MinerU separately, configure `local_toolchain.sources`, then run `minerupress fetch book.yml`.
+4. Inspect generated MinerU output and heading candidates.
+5. Refine `chapters` in `book.yml`.
+6. Run `minerupress export book.yml`.
+7. Verify with `mkdocs build --strict`.
+8. Optionally create fingerprints with `minerupress fingerprint --docs-dir docs --out reports/fingerprints.json`.
 
-1. Inspect the book workspace:
-   - Read `book.yml`, `mkdocs.yml`, and `AGENTS.md` if present.
-   - Check `resources/mineru/` for one or more MinerU output directories containing `*_content_list.json`.
-   - Treat `docs/chapters/`, `docs/images/`, `site/`, `reports/`, and `.env` as generated or local-only unless the user explicitly asks otherwise.
+Use `minerupress export --fetch book.yml` only as a convenience or backward-compatible shortcut. In explanations, keep `fetch` as "prepare source then export" and `export` as "export existing MinerU output".
 
-2. If the user starts from a raw PDF instead of existing MinerU output:
-   - Create or use an isolated workspace for that specific book.
-   - Copy the PDF into `resources/pdfs/` inside the workspace instead of referencing a cloud-drive or protected external path directly.
-   - Choose a source mode:
-     - `official_api` is the preferred default for new workspaces.
-     - `local_toolchain` is valid only when the user already installed MinerU separately.
-     - `uploaded_result` is only for pre-existing parsed output under `resources/mineru/`.
-   - Write a minimal `api:` block and a temporary placeholder chapter when using `official_api`.
-   - Run `minerupress fetch book.yml` first to fetch MinerU output and get an initial export.
-   - Run `minerupress headings resources/mineru --volume-uid <uid> --format yaml --body-only` to generate a chapter YAML draft.
+## Workspace Rules
 
-3. Configure `book.yml`:
-   - Set `source` explicitly for new configs: `official_api`, `local_toolchain`, or `uploaded_result`.
-   - Use a top-level `volume_uid` for a logical book/PDF. Split outputs such as `javaweb_p1` and `javaweb_p2` can share `volume_uid: javaweb`.
-   - Prefer chapter `title` plus `slug`; omit `start_pattern` unless the generated boundary matcher is ambiguous.
-   - Add `aliases` or `start_patterns` only when MinerU headings differ from the canonical title.
-   - Keep `allow_missing_boundaries: false` for production runs.
-   - After the first fetch, inspect `*_content_list.json` and replace placeholder chapters with the real chapter list.
-   - If the table of contents page causes false matches, prefer a display-only `title` plus an exact `start_pattern` such as `^第\\s*1\\s*章$`.
-   - Do not make MineruPress install MinerU as an internal dependency. If the user wants `local_toolchain`, point them to MinerU's official install docs and treat the CLI as an external prerequisite.
+When operating on a book workspace:
 
-4. Run export:
+- Read `book.yml` and `mkdocs.yml` first.
+- Read local `AGENTS.md` if present.
+- Treat `.env`, source PDFs, `resources/mineru/`, `docs/chapters/`, `docs/images/`, `site/`, and `reports/` as local/generated unless the user explicitly wants to version that book project.
+- Do not hand-edit generated chapter Markdown as the durable fix; update `book.yml`, the source MinerU output, or a plugin.
+- Copy PDFs into the workspace, usually under `resources/pdfs/`, before API fetch or local parsing. This avoids PDF splitting into protected/cloud-drive paths.
+
+## Commands
+
+Current primary CLI:
 
 ```bash
+minerupress init my-book
 minerupress export book.yml
-```
-
-For cloud API upload and export:
-
-```bash
 minerupress fetch book.yml
-```
-
-Legacy wrappers `minerupress-export`, `minerupress-fetch`, `minerupress-headings`, `mineru-export`, and `mineru-fetch` are also available for existing projects.
-
-5. Verify:
-
-```bash
-mkdocs build --strict
-```
-
-If Markdown fingerprints are part of the project workflow:
-
-```bash
+minerupress headings resources/mineru --volume-uid my-book --format yaml --body-only
 minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
+Legacy wrappers such as `minerupress-export`, `minerupress-fetch`, `minerupress-headings`, `mineru-export`, and `mineru-fetch` remain available only for existing projects. Do not present them as the main workflow.
+
+## `book.yml` Guidance
+
+Set `source` explicitly for new configs:
+
+```yaml
+source: uploaded_result
+mineru_root: resources/mineru
+docs_out: docs
+volume_uid: my-book
+toc_max_page: 10
+allow_missing_boundaries: false
+
+plugins:
+  - qr_filter
+  - cjk_spacing
+
+chapters:
+  - slug: ch01-overview
+    title: 第1章 概述
+```
+
+For API mode:
+
+```yaml
+source: official_api
+api:
+  token: ""
+  enable_formula: true
+  enable_table: true
+  model_version: vlm
+  sources:
+    my-book: resources/pdfs/book.pdf
+```
+
+For local MinerU CLI mode:
+
+```yaml
+source: local_toolchain
+local_toolchain:
+  executable: mineru
+  args:
+    - -b
+    - pipeline
+  sources:
+    my-book: resources/pdfs/book.pdf
+```
+
+`local_toolchain.args` must not include `-p`, `--path`, `-o`, or `--output`; MineruPress appends those automatically.
+
 ## Chapter Boundary Guidance
 
-The exporter can infer boundary patterns from chapter titles. Use titles like:
-
-- `第10章 JavaScript`
-- `附录A 部分习题的解答`
-- `Chapter 3 Arrays`
-- `项目二 尚硅谷书城`
-- `10.1 JavaScript 简介`
+Prefer chapter `title` plus `slug`; omit regexes unless matching is ambiguous.
 
 Use `aliases` for alternate visible headings:
 
@@ -128,8 +154,7 @@ chapters:
 
 Only use `--allow-missing-boundaries` while diagnosing bad MinerU output. A successful production run should find every configured chapter boundary.
 
-If TOC lines such as `第1章 引论 …… 3` are matched before the real body heading,
-switch to exact body-heading regexes:
+If TOC lines such as `第1章 引论 …… 3` are matched before the real body heading, switch to exact body-heading regexes:
 
 ```yaml
 chapters:
@@ -138,40 +163,46 @@ chapters:
     start_pattern: "^第\\s*1\\s*章$"
 ```
 
-This avoids the generated title matcher from locking onto the table of contents.
-
 Use the headings helper before hand-writing many boundaries:
 
 ```bash
-minerupress headings resources/mineru --volume-uid javaweb --format report
-minerupress headings resources/mineru --volume-uid javaweb --format yaml --body-only
+minerupress headings resources/mineru --volume-uid my-book --format report
+minerupress headings resources/mineru --volume-uid my-book --format yaml --body-only
 ```
 
-The report marks TOC-looking candidates as `toc?` and body-looking candidates as `body`.
+## Verification
 
-## Generated Outputs
+For a user workspace:
+
+```bash
+minerupress export book.yml
+mkdocs build --strict
+```
+
+For repository development:
+
+```bash
+python -m compileall minerupress
+pytest
+```
+
+When template behavior changes, confirm `book_template/` and `minerupress/book_template/` are synchronized and that `minerupress init <tmp-dir>` creates a buildable placeholder site.
+
+## Generated Output Behavior
 
 Each export rebuilds:
 
 - `docs/chapters/`
 - `docs/images/`
 
-Do not hand-edit generated chapter Markdown as a long-term fix. Instead, update `book.yml`, source MinerU output, or add a plugin.
+If a chapter appears wrong, fix the configuration, source data, or plugin. Avoid treating generated Markdown as the source of truth.
 
-## Code And HTML Prose
+## Content Details
 
-MinerU code items may store their body in `code_body` rather than `text`.
-The exporter preserves already-fenced code blocks from MinerU and falls back
-to wrapping unfenced code. If a chapter appears to drop examples after phrases
-like "示例代码如下", inspect the source `*_content_list.json` for `type: code`
-items before editing generated Markdown.
+MinerU code items may store their body in `code_body` rather than `text`. The exporter preserves already-fenced code blocks from MinerU and wraps unfenced code.
 
-Literal HTML/XML tags in normal prose and captions are escaped during export
-so textbooks can discuss tags such as `<span>` without MkDocs rendering them
-as real HTML. Raw `table_body` HTML is preserved as table markup.
+Literal HTML/XML tags in normal prose and captions are escaped during export so textbooks can discuss tags such as `<span>` without MkDocs rendering them as real HTML. Raw `table_body` HTML is preserved as table markup.
 
 ## References
 
-Read `references/book-yml.md` when you need a compact configuration reference or examples.
-For the end-to-end isolated-book workflow, also read the project docs page
-`docs/guide/workflow-run-a-book.md` in this repository.
+Read `references/book-yml.md` for compact config examples. For the current end-to-end user workflow, read `docs/guide/getting-started.md`, `docs/guide/configuration.md`, and `docs/guide/workflow-run-a-book.md`.
