@@ -2,7 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from minerupress.core import BookConfig, ChapterConfig, export
+from minerupress.core import (
+    BookConfig,
+    ChapterConfig,
+    _VolumeSegment,
+    _compile_boundary_patterns,
+    _find_boundary_after,
+    export,
+)
 
 
 def _write_volume(root: Path, name: str, items: list[dict], image_name: str = "shared.png") -> None:
@@ -104,3 +111,172 @@ def test_missing_boundary_fails_in_strict_mode(tmp_path: Path) -> None:
 
     with pytest.raises(RuntimeError, match="Chapter boundaries not found"):
         export(config)
+
+
+def test_aside_text_can_be_a_chapter_boundary(tmp_path: Path) -> None:
+    segments = [
+        _VolumeSegment(
+            uid="book",
+            path=tmp_path,
+            items=[
+                {"type": "aside_text", "text": "第1章\n绪论", "page_idx": 16},
+                {"type": "text", "text": "1.1 通信的基本概念", "page_idx": 16},
+            ],
+        )
+    ]
+    patterns = _compile_boundary_patterns(
+        ChapterConfig(slug="ch01", title="第1章 绪论", volume_uid="book")
+    )
+
+    assert _find_boundary_after(segments, patterns, None, 0) == (0, 0)
+
+
+def test_generated_chapter_title_patterns_do_not_match_bare_answer_labels(
+    tmp_path: Path,
+) -> None:
+    segments = [
+        _VolumeSegment(
+            uid="book",
+            path=tmp_path,
+            items=[
+                {"type": "text", "text": "第1章", "page_idx": 97},
+            ],
+        )
+    ]
+    patterns = _compile_boundary_patterns(
+        ChapterConfig(slug="ch01", title="第1章 绪论", volume_uid="book")
+    )
+
+    assert _find_boundary_after(segments, patterns, None, 0) is None
+
+
+def test_bare_chapter_title_still_matches_bare_chapter_label(tmp_path: Path) -> None:
+    segments = [
+        _VolumeSegment(
+            uid="book",
+            path=tmp_path,
+            items=[
+                {"type": "text", "text": "第 1 章", "page_idx": 10},
+            ],
+        )
+    ]
+    patterns = _compile_boundary_patterns(
+        ChapterConfig(slug="ch01", title="第1章", volume_uid="book")
+    )
+
+    assert _find_boundary_after(segments, patterns, None, 0) == (0, 0)
+
+
+def test_generated_patterns_cover_common_chinese_variants(tmp_path: Path) -> None:
+    segments = [
+        _VolumeSegment(
+            uid="book",
+            path=tmp_path,
+            items=[
+                {"type": "text", "text": "第一章：绪论", "page_idx": 10},
+                {"type": "text", "text": "第 2 章  确知信号", "page_idx": 20},
+                {"type": "text", "text": "项目二、尚硅谷书城", "page_idx": 30},
+            ],
+        )
+    ]
+
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("ch01", "第1章 绪论", "book")),
+        None,
+        0,
+    ) == (0, 0)
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("ch02", "第二章 确知信号", "book")),
+        None,
+        0,
+    ) == (0, 1)
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("project-02", "项目2 尚硅谷书城", "book")),
+        None,
+        0,
+    ) == (0, 2)
+
+
+def test_generated_patterns_cover_common_english_variants(tmp_path: Path) -> None:
+    segments = [
+        _VolumeSegment(
+            uid="book",
+            path=tmp_path,
+            items=[
+                {"type": "text", "text": "CHAPTER ONE: Introduction", "page_idx": 10},
+                {"type": "text", "text": "Chap. 2 Signals and Systems", "page_idx": 20},
+                {"type": "text", "text": "PART 2 - Digital Transmission", "page_idx": 30},
+                {"type": "text", "text": "Lesson IV. Modulation", "page_idx": 40},
+                {"type": "text", "text": "App. B: Tables", "page_idx": 50},
+            ],
+        )
+    ]
+
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("ch01", "Chapter 1 Introduction", "book")),
+        None,
+        0,
+    ) == (0, 0)
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("ch02", "Chapter Two Signals", "book")),
+        None,
+        0,
+    ) == (0, 1)
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("part-02", "Part II Digital Transmission", "book")),
+        None,
+        0,
+    ) == (0, 2)
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("lesson-04", "Lesson 4 Modulation", "book")),
+        None,
+        0,
+    ) == (0, 3)
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("appendix-b", "Appendix B Tables", "book")),
+        None,
+        0,
+    ) == (0, 4)
+
+
+def test_generated_patterns_do_not_match_bare_labels_when_title_has_text(
+    tmp_path: Path,
+) -> None:
+    segments = [
+        _VolumeSegment(
+            uid="book",
+            path=tmp_path,
+            items=[
+                {"type": "text", "text": "附录A", "page_idx": 97},
+                {"type": "text", "text": "Chapter 1", "page_idx": 98},
+                {"type": "text", "text": "10.1", "page_idx": 99},
+            ],
+        )
+    ]
+
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("appendix-a", "附录A 习题答案", "book")),
+        None,
+        0,
+    ) is None
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("ch01", "Chapter 1 Introduction", "book")),
+        None,
+        0,
+    ) is None
+    assert _find_boundary_after(
+        segments,
+        _compile_boundary_patterns(ChapterConfig("sec-10-1", "10.1 JavaScript 简介", "book")),
+        None,
+        0,
+    ) is None

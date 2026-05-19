@@ -32,3 +32,21 @@ def test_headings_separates_toc_from_body_and_suggests_yaml(capsys) -> None:
     assert "title: 引论" in yaml
     assert "slug: appendix-a" in yaml
     assert "第1章 引论" not in yaml
+
+
+def test_headings_includes_aside_text_chapter_candidates() -> None:
+    segments = [
+        (
+            "book_part1",
+            [
+                {"type": "aside_text", "page_idx": 16, "text": "第1章\n绪论"},
+                {"type": "text", "text_level": 1, "page_idx": 16, "text": "1.1 通信的基本概念"},
+            ],
+        )
+    ]
+
+    candidates = analyze_headings(segments, toc_max_page=10, include_toc=True)
+
+    assert candidates[0].kind == "chapter"
+    assert candidates[0].title == "绪论"
+    assert candidates[0].start_pattern == r"^第\s*1\s*章$"

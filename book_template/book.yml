@@ -79,7 +79,8 @@ plugins:
 
 # 章节列表
 # volume_uid: 可省略；省略时使用顶层 volume_uid。多 PDF/多逻辑卷时再逐章填写。
-# title 会自动推导章节边界，支持“第1章”“附录A”“Chapter 1”“项目二”“10.1”等格式。
+# title 会自动推导章节边界，支持“第1章”“附录A”“Chapter 1”“Lesson IV”
+# “Appendix B”“项目二”“10.1”等格式。
 # 若 MinerU 识别出的标题与 title 不同，可用 aliases 或 start_patterns 补充。
 chapters:
   - slug: ch01-overview

@@ -46,7 +46,7 @@
 
 - 第一个章节会应用 `toc_max_page` 目录页过滤
 - 后续章节从上一章边界后继续向后找
-- 只在 `type == "text"` 的 item 中匹配章节边界
+- 只在文本型边界 item 中匹配章节边界，目前包括 `type == "text"` 和 `type == "aside_text"`
 - 如果边界缺失且 `allow_missing_boundaries: false`，整个导出会失败
 
 这能最大限度避免章节错位后继续静默生成错误内容。

@@ -89,4 +89,4 @@ Practical guidance:
 - Use `minerupress headings resources/mineru --volume-uid my-book --format yaml --body-only` after the first fetch to draft chapter boundaries.
 - If TOC entries are matched too early, use a display-only `title` plus an exact `start_pattern`.
 
-Supported inferred heading styles include Chinese chapter/section labels, appendices, English `Chapter`/`Unit`/`Module`/`Part`/`Section`, project/module/task labels, and numeric headings such as `10.1`.
+Supported inferred heading styles include Chinese chapter/section labels, appendices, English `Chapter`/`Chap.`/`Unit`/`Module`/`Part`/`Section`/`Lesson`/`Lecture`, English `Appendix`/`App.`, project/module/task labels, Roman numerals such as `Lesson IV`, and numeric headings such as `10.1`.

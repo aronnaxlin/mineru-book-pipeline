@@ -28,7 +28,7 @@ class ChapterConfig:
     slug: str                  # output filename stem, e.g. "ch01-overview"
     title: str                 # display title, e.g. "第1章 概述"
     volume_uid: str            # prefix of the MinerU output directory UID
-    start_pattern: str | None = None  # regex matched against text items to find boundary
+    start_pattern: str | None = None  # regex matched against text-like items to find boundary
     toc_max_page: int | None = None  # overrides BookConfig.toc_max_page for this chapter
     start_patterns: list[str] = field(default_factory=list)
     aliases: list[str] = field(default_factory=list)
@@ -58,6 +58,7 @@ class _VolumeSegment:
 # ---------------------------------------------------------------------------
 
 _SKIP_TYPES = {"page_number", "header", "footer", "page_footnote"}
+_BOUNDARY_TYPES = {"text", "aside_text"}
 _LEVEL_MAP  = {1: "#", 2: "##", 3: "###", 4: "####"}
 _NATURAL_PARTS = re.compile(r"(\d+)")
 _CHAPTER_LABEL_RE = re.compile(
@@ -69,12 +70,62 @@ _BARE_LABEL_RE = re.compile(
     r"([0-9０-９一二三四五六七八九十百千万零〇两A-Za-z]+)"
 )
 _APPENDIX_RE = re.compile(r"^\s*附\s*录\s*([A-Za-zＡ-Ｚａ-ｚ0-9０-９一二三四五六七八九十]+)")
+_EN_NUMBER_WORD_RE = (
+    r"one|two|three|four|five|six|seven|eight|nine|ten|"
+    r"eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|"
+    r"first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|"
+    r"eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|"
+    r"eighteenth|nineteenth|twentieth"
+)
+_EN_NUMBER_TOKEN_RE = rf"(?:[0-9]+[A-Za-z]?|[ivxlcdm]+|{_EN_NUMBER_WORD_RE})"
 _EN_CHAPTER_RE = re.compile(
-    r"^\s*(chapter|chap\.?|unit|module|part|section)\s*([0-9]+[A-Za-z]?)\b",
+    rf"^\s*(chapter|chap\.?|unit|module|part|section|lesson|lecture|book)\s*"
+    rf"({_EN_NUMBER_TOKEN_RE})\b",
+    re.IGNORECASE,
+)
+_EN_APPENDIX_RE = re.compile(
+    rf"^\s*(appendix|app\.?)\s*({_EN_NUMBER_TOKEN_RE}|[A-Za-z])\b",
     re.IGNORECASE,
 )
 _NUMBERED_RE = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)*)\b")
 _FENCE_RE = re.compile(r"^```", re.MULTILINE)
+_TITLE_TAIL_PATTERN = r"(?:\s|[:：、,，;；.!?。．-])\s*\S.*"
+_EN_NUMBERS = {
+    "one": 1, "first": 1,
+    "two": 2, "second": 2,
+    "three": 3, "third": 3,
+    "four": 4, "fourth": 4,
+    "five": 5, "fifth": 5,
+    "six": 6, "sixth": 6,
+    "seven": 7, "seventh": 7,
+    "eight": 8, "eighth": 8,
+    "nine": 9, "ninth": 9,
+    "ten": 10, "tenth": 10,
+    "eleven": 11, "eleventh": 11,
+    "twelve": 12, "twelfth": 12,
+    "thirteen": 13, "thirteenth": 13,
+    "fourteen": 14, "fourteenth": 14,
+    "fifteen": 15, "fifteenth": 15,
+    "sixteen": 16, "sixteenth": 16,
+    "seventeen": 17, "seventeenth": 17,
+    "eighteen": 18, "eighteenth": 18,
+    "nineteen": 19, "nineteenth": 19,
+    "twenty": 20, "twentieth": 20,
+}
+_EN_CARDINALS = {
+    1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+    6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten",
+    11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen",
+    15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen",
+    19: "nineteen", 20: "twenty",
+}
+_EN_ORDINALS = {
+    1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth",
+    6: "sixth", 7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth",
+    11: "eleventh", 12: "twelfth", 13: "thirteenth", 14: "fourteenth",
+    15: "fifteenth", 16: "sixteenth", 17: "seventeenth", 18: "eighteenth",
+    19: "nineteenth", 20: "twentieth",
+}
 
 
 def _caption_text(raw) -> str:
@@ -180,7 +231,7 @@ def _find_boundary_after(
     for seg_idx in range(start_seg, len(segments)):
         start_item = after[1] + 1 if after and seg_idx == after[0] else 0
         for item_idx, item in enumerate(segments[seg_idx].items[start_item:], start_item):
-            if item.get("type") != "text":
+            if item.get("type") not in _BOUNDARY_TYPES:
                 continue
             if (
                 after is None
@@ -216,48 +267,83 @@ def _generated_boundary_patterns(title: str, aliases: Sequence[str]) -> list[str
         m = _CHAPTER_LABEL_RE.match(heading)
         if m:
             num, unit = m.groups()
-            patterns.append(
-                rf"^\s*第\s*{_flexible_number(num)}\s*{re.escape(unit)}(?:\s|$|[:：、.-]).*"
-            )
-            patterns.append(
-                rf"^\s*第\s*{_flexible_number(num)}\s*{re.escape(unit)}\s*$"
+            _append_numbered_label_pattern(
+                patterns,
+                rf"第\s*{_flexible_number(num)}\s*{re.escape(unit)}",
+                has_title=bool(heading[m.end():].strip()),
             )
             continue
 
         m = _APPENDIX_RE.match(heading)
         if m:
             label = m.group(1)
-            patterns.append(
-                rf"^\s*附\s*录\s*{_flexible_number(label)}(?:\s|$|[:：、.-]).*"
+            _append_numbered_label_pattern(
+                patterns,
+                rf"附\s*录\s*{_flexible_number(label)}",
+                has_title=bool(heading[m.end():].strip()),
             )
-            patterns.append(rf"^\s*附\s*录\s*{_flexible_number(label)}\s*$")
             continue
 
         m = _EN_CHAPTER_RE.match(heading)
         if m:
             word, num = m.groups()
-            word_pat = {
-                "chap.": r"chap(?:ter)?\.?",
-                "chap": r"chap(?:ter)?\.?",
-                "chapter": r"chap(?:ter)?\.?",
-            }.get(word.lower(), re.escape(word))
-            patterns.append(rf"^\s*{word_pat}\s*{re.escape(num)}\b.*")
+            _append_numbered_label_pattern(
+                patterns,
+                rf"{_english_label_pattern(word)}\s*{_flexible_number(num)}\b",
+                has_title=bool(heading[m.end():].strip()),
+            )
+            continue
+
+        m = _EN_APPENDIX_RE.match(heading)
+        if m:
+            word, label = m.groups()
+            _append_numbered_label_pattern(
+                patterns,
+                rf"{_english_label_pattern(word)}\s*{_flexible_number(label)}\b",
+                has_title=bool(heading[m.end():].strip()),
+            )
             continue
 
         m = _BARE_LABEL_RE.match(heading)
         if m:
             label, num = m.groups()
-            patterns.append(
-                rf"^\s*{re.escape(label)}\s*{_flexible_number(num)}(?:\s|$|[:：、.-]).*"
+            _append_numbered_label_pattern(
+                patterns,
+                rf"{re.escape(label)}\s*{_flexible_number(num)}",
+                has_title=bool(heading[m.end():].strip()),
             )
-            patterns.append(rf"^\s*{re.escape(label)}\s*{_flexible_number(num)}\s*$")
             continue
 
         m = _NUMBERED_RE.match(heading)
         if m:
             num = re.escape(m.group(1))
-            patterns.append(rf"^\s*{num}(?:\s|$|[:：、.-]).*")
+            _append_numbered_label_pattern(
+                patterns,
+                num,
+                has_title=bool(heading[m.end():].strip()),
+            )
     return patterns
+
+
+def _append_numbered_label_pattern(
+    patterns: list[str],
+    label_pattern: str,
+    *,
+    has_title: bool,
+) -> None:
+    if has_title:
+        patterns.append(rf"^\s*{label_pattern}{_TITLE_TAIL_PATTERN}")
+    else:
+        patterns.append(rf"^\s*{label_pattern}\s*$")
+
+
+def _english_label_pattern(word: str) -> str:
+    normalized = word.lower().rstrip(".")
+    if normalized in {"chap", "chapter"}:
+        return r"chap(?:ter)?\.?"
+    if normalized in {"app", "appendix"}:
+        return r"app(?:endix)?\.?"
+    return re.escape(normalized)
 
 
 def _flexible_literal(text: str) -> str:
@@ -268,11 +354,32 @@ def _flexible_literal(text: str) -> str:
 def _flexible_number(text: str) -> str:
     normalized = _ascii_digits(text)
     candidates = {re.escape(text), re.escape(normalized)}
+    number_value: int | None = None
     if normalized.isdigit():
-        candidates.add(re.escape(_int_to_han(int(normalized))))
+        number_value = int(normalized)
+        candidates.add(re.escape(_int_to_han(number_value)))
     han_int = _han_to_int(normalized)
     if han_int is not None:
+        number_value = han_int
         candidates.add(str(han_int))
+    roman_int = _roman_to_int(normalized)
+    if roman_int is not None:
+        number_value = roman_int
+        candidates.add(str(roman_int))
+    english_int = _EN_NUMBERS.get(normalized.lower())
+    if english_int is not None:
+        number_value = english_int
+        candidates.add(str(english_int))
+    if number_value is not None:
+        cardinal = _EN_CARDINALS.get(number_value)
+        ordinal = _EN_ORDINALS.get(number_value)
+        if cardinal:
+            candidates.add(re.escape(cardinal))
+        if ordinal:
+            candidates.add(re.escape(ordinal))
+        roman = _int_to_roman(number_value)
+        if roman:
+            candidates.add(re.escape(roman))
     return "(?:" + "|".join(sorted(candidates)) + ")"
 
 
@@ -304,6 +411,40 @@ def _han_to_int(text: str) -> int | None:
             total += (section + number) * 10000
             section = number = 0
     return total + section + number
+
+
+def _roman_to_int(text: str) -> int | None:
+    if not text or not re.fullmatch(r"[ivxlcdmIVXLCDM]+", text):
+        return None
+    values = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
+    total = 0
+    prev = 0
+    for ch in reversed(text.upper()):
+        value = values[ch]
+        if value < prev:
+            total -= value
+        else:
+            total += value
+            prev = value
+    # Reject non-canonical forms so ordinary words made of roman letters don't
+    # accidentally become numbers.
+    return total if _int_to_roman(total) == text.upper() else None
+
+
+def _int_to_roman(value: int) -> str:
+    if value <= 0 or value >= 4000:
+        return ""
+    pairs = [
+        (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"),
+        (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
+        (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I"),
+    ]
+    out: list[str] = []
+    remaining = value
+    for amount, numeral in pairs:
+        count, remaining = divmod(remaining, amount)
+        out.extend([numeral] * count)
+    return "".join(out)
 
 
 def _int_to_han(value: int) -> str:

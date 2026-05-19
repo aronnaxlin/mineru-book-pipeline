@@ -30,6 +30,7 @@ _PART_RE = re.compile(
     r"^\s*第\s*([0-9０-９一二三四五六七八九十百千万零〇两]+)\s*篇\s*(.+?)?\s*$"
 )
 _SECTION_RE = re.compile(r"^\s*\d+(?:\.\d+)+\s+")
+_HEADING_TYPES = {"text", "aside_text"}
 
 
 @dataclass(frozen=True)
@@ -86,7 +87,10 @@ def analyze_headings(
     results: list[HeadingCandidate] = []
     for segment_name, items in segments:
         for item_idx, item in enumerate(items):
-            if item.get("type") != "text" or item.get("text_level") != 1:
+            item_type = item.get("type")
+            if item_type not in _HEADING_TYPES:
+                continue
+            if item_type == "text" and item.get("text_level") != 1:
                 continue
             text = _normalize_text(item.get("text", ""))
             if not text:

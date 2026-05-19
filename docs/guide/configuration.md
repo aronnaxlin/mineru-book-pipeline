@@ -70,7 +70,10 @@ chapters:
 - `第十章 JavaScript`
 - `附录A 习题答案`
 - `Chapter 3 Arrays`
+- `Chap. 3: Arrays`
 - `Unit 1`
+- `Lesson IV Modulation`
+- `Appendix B Tables`
 - `项目二 尚硅谷书城`
 - `10.1 JavaScript 简介`
 
@@ -87,6 +90,8 @@ minerupress headings resources/mineru --volume-uid javaweb --format yaml --body-
 ```
 
 它会优先使用正文页上的独立章号行生成 `start_pattern`，降低目录页 TOC 误匹配的概率。
+
+为避免把附录习题答案区的孤立 `第1章`、`Chapter 1`、`10.1` 等分节误判为正文边界，自动模式在 `title` 含有标题文字时，会要求编号后也出现标题文字。确实只有裸章号的正文边界，可以显式写 `start_pattern`。
 
 ## `source` 选择
 

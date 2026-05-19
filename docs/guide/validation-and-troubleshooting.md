@@ -58,6 +58,8 @@ minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 - 用 `start_pattern: ^第\\s*1\\s*章$` 这类“正文页章号行”正则锁定真实边界
 - 必要时把 `title` 改成纯章节名，避免自动推导出的标题模式和目录页冲突
 
+自动推导边界时，如果标题写成 `第1章 绪论` 这类“章号 + 标题”形式，导出器不会再用它去匹配附录答案区里孤立的 `第1章` 分节。若某本书的真实正文边界确实只有裸 `第 1 章`，请显式写 `start_pattern` 或把 `title` 写成对应裸章号。
+
 可以先跑标题分析命令辅助判断：
 
 ```bash
