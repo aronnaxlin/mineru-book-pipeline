@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "minerupress"
-version = "0.1.1"
+version = "0.1.2"
 description = "Turn MinerU output into publishable MkDocs Material book sites"
 readme = "README.md"
 requires-python = ">=3.11"
