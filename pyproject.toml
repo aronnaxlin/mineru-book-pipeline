@@ -37,11 +37,13 @@ Repository = "https://github.com/aronnaxlin/minerupress"
 Issues = "https://github.com/aronnaxlin/minerupress/issues"
 
 [project.scripts]
-minerupress-export = "minerupress.cli:main"
+minerupress = "minerupress.cli:main"
+minerupress-export = "minerupress.cli:export_main"
 minerupress-fetch  = "minerupress.cli:fetch_main"
-minerupress-headings = "minerupress.headings:main"
-mineru-export = "minerupress.cli:main"
-mineru-fetch  = "minerupress.cli:fetch_main"
+minerupress-headings = "minerupress.cli:headings_main"
+minerupress-fingerprint = "minerupress.cli:fingerprint_main"
+mineru-export = "minerupress.cli:mineru_export_main"
+mineru-fetch  = "minerupress.cli:mineru_fetch_main"
 
 [tool.setuptools.packages.find]
 where = ["."]

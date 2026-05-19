@@ -6,9 +6,9 @@ REPORTS    := reports
 
 all: export lint fmt-check fingerprint build
 
-## export: Run minerupress-export with book.yml
+## export: Run minerupress export with book.yml
 export:
-	minerupress-export book.yml
+	minerupress export book.yml
 
 ## lint: Run markdownlint-cli2 on all docs
 lint:
@@ -24,7 +24,7 @@ fmt:
 
 ## fingerprint: Generate/diff SHA-256 fingerprints for docs/
 fingerprint:
-	$(PYTHON) -m minerupress.fingerprint --docs-dir $(DOCS_OUT) --out $(REPORTS)/fingerprints.json
+	minerupress fingerprint --docs-dir $(DOCS_OUT) --out $(REPORTS)/fingerprints.json
 
 ## serve: Start MkDocs dev server
 serve:

@@ -1,6 +1,6 @@
 ---
 name: minerupress
-description: Use when an AI agent needs to turn MinerU local output or MinerU cloud API results into a publishable MkDocs Material book site with chapter splitting, image filtering, CJK spacing, strict validation, and optional Cloudflare Pages deployment. Trigger for tasks involving MineruPress, minerupress, MinerU content_list.json, book.yml, minerupress-export, minerupress-fetch, mineru-export, mineru-fetch, generated docs/chapters, or PDF-to-MkDocs book publishing automation.
+description: Use when an AI agent needs to turn uploaded MinerU results, a separately installed local MinerU CLI, or MinerU official API results into a publishable MkDocs Material book site with chapter splitting, image filtering, CJK spacing, strict validation, and optional Cloudflare Pages deployment. Trigger for tasks involving MineruPress, minerupress, MinerU content_list.json, book.yml, `minerupress export`, `minerupress fetch`, `minerupress headings`, `minerupress fingerprint`, mineru-export, mineru-fetch, generated docs/chapters, or PDF-to-MkDocs book publishing automation.
 ---
 
 # MineruPress
@@ -29,9 +29,9 @@ Default to a two-stage, isolated workflow when the user starts from a raw PDF:
 
 1. Create an isolated book workspace rather than reusing the toolchain root.
 2. Copy the source PDF into that workspace under `resources/pdfs/`.
-3. Run a first pass with `minerupress-fetch` to obtain MinerU output.
+3. Set `source: official_api` and run a first pass with `minerupress fetch` to obtain MinerU output.
 4. Inspect `*_content_list.json` to confirm the real chapter boundary shape.
-5. Refine `book.yml` chapter boundaries and rerun `minerupress-export`.
+5. Refine `book.yml` chapter boundaries and rerun `minerupress export`.
 6. Verify with `mkdocs build --strict` and optionally fingerprints.
 
 This is the safest default because:
@@ -51,31 +51,37 @@ This is the safest default because:
 2. If the user starts from a raw PDF instead of existing MinerU output:
    - Create or use an isolated workspace for that specific book.
    - Copy the PDF into `resources/pdfs/` inside the workspace instead of referencing a cloud-drive or protected external path directly.
-   - Write a minimal `api:` block and a temporary placeholder chapter.
-   - Run `minerupress-fetch book.yml` first to fetch MinerU output and get an initial export.
-   - Run `minerupress-headings resources/mineru --volume-uid <uid> --format yaml --body-only` to generate a chapter YAML draft.
+   - Choose a source mode:
+     - `official_api` is the preferred default for new workspaces.
+     - `local_toolchain` is valid only when the user already installed MinerU separately.
+     - `uploaded_result` is only for pre-existing parsed output under `resources/mineru/`.
+   - Write a minimal `api:` block and a temporary placeholder chapter when using `official_api`.
+   - Run `minerupress fetch book.yml` first to fetch MinerU output and get an initial export.
+   - Run `minerupress headings resources/mineru --volume-uid <uid> --format yaml --body-only` to generate a chapter YAML draft.
 
 3. Configure `book.yml`:
+   - Set `source` explicitly for new configs: `official_api`, `local_toolchain`, or `uploaded_result`.
    - Use a top-level `volume_uid` for a logical book/PDF. Split outputs such as `javaweb_p1` and `javaweb_p2` can share `volume_uid: javaweb`.
    - Prefer chapter `title` plus `slug`; omit `start_pattern` unless the generated boundary matcher is ambiguous.
    - Add `aliases` or `start_patterns` only when MinerU headings differ from the canonical title.
    - Keep `allow_missing_boundaries: false` for production runs.
    - After the first fetch, inspect `*_content_list.json` and replace placeholder chapters with the real chapter list.
    - If the table of contents page causes false matches, prefer a display-only `title` plus an exact `start_pattern` such as `^第\\s*1\\s*章$`.
+   - Do not make MineruPress install MinerU as an internal dependency. If the user wants `local_toolchain`, point them to MinerU's official install docs and treat the CLI as an external prerequisite.
 
 4. Run export:
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 ```
 
 For cloud API upload and export:
 
 ```bash
-minerupress-fetch book.yml
+minerupress fetch book.yml
 ```
 
-Legacy commands `mineru-export` and `mineru-fetch` are also available for existing projects.
+Legacy wrappers `minerupress-export`, `minerupress-fetch`, `minerupress-headings`, `mineru-export`, and `mineru-fetch` are also available for existing projects.
 
 5. Verify:
 
@@ -86,7 +92,7 @@ mkdocs build --strict
 If Markdown fingerprints are part of the project workflow:
 
 ```bash
-python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
 ## Chapter Boundary Guidance
@@ -137,8 +143,8 @@ This avoids the generated title matcher from locking onto the table of contents.
 Use the headings helper before hand-writing many boundaries:
 
 ```bash
-minerupress-headings resources/mineru --volume-uid javaweb --format report
-minerupress-headings resources/mineru --volume-uid javaweb --format yaml --body-only
+minerupress headings resources/mineru --volume-uid javaweb --format report
+minerupress headings resources/mineru --volume-uid javaweb --format yaml --body-only
 ```
 
 The report marks TOC-looking candidates as `toc?` and body-looking candidates as `body`.

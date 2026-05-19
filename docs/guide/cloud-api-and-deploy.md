@@ -2,7 +2,7 @@
 
 这一页覆盖两个有副作用的功能：
 
-- `minerupress-fetch` 调用 MinerU 云端 API
+- `minerupress fetch` 调用 MinerU 云端 API
 - `cf_pages` 插件部署到 Cloudflare Pages
 
 ## MinerU 云端 API
@@ -10,6 +10,8 @@
 如果你不想先在本地准备 MinerU 输出，而是希望直接上传 PDF 并拿回解析结果，可以在 `book.yml` 中配置 `api:`：
 
 ```yaml
+source: official_api
+
 api:
   token: ""
   enable_formula: true
@@ -28,12 +30,12 @@ MINERU_API_TOKEN=...
 然后执行：
 
 ```bash
-minerupress-fetch book.yml
+minerupress fetch book.yml
 ```
 
-如果你要在工具链仓库里临时跑一本书，推荐先建一个被忽略的隔离工作区，再在里面执行 `minerupress-fetch`。完整示例见 [实战工作流](workflow-run-a-book.md)。
+如果你要在工具链仓库里临时跑一本书，推荐先建一个被忽略的隔离工作区，再在里面执行 `minerupress fetch`。完整示例见 [实战工作流](workflow-run-a-book.md)。
 
-## `minerupress-fetch` 做了什么
+## `minerupress fetch` 做了什么
 
 它会：
 
@@ -53,7 +55,7 @@ minerupress-fetch book.yml
 1. 复制 `book_template/` 到独立目录，或仓库内的临时目录
 2. 把源 PDF 复制到工作区内的 `resources/pdfs/`
 3. 在工作区写 `.env` 和 `book.yml`
-4. 运行 `minerupress-fetch book.yml`
+4. 运行 `minerupress fetch book.yml`
 
 这样做的好处：
 
@@ -71,15 +73,19 @@ MinerU API 对单文件页数有限制。MineruPress 会在超限时自动拆分
 
 这意味着你不需要在 `book.yml` 手工维护 `part1`、`part2` 之类的章节配置。
 
-## `minerupress-export --fetch`
+## `minerupress export --fetch`
 
-如果你已经有部分本地输出，但还想在导出前按 `api:` 补抓缺失或重抓内容，可以用：
+如果你已经有部分本地输出，但还想在导出前按当前 `source` 重新准备内容，可以用：
 
 ```bash
-minerupress-export --fetch book.yml
+minerupress export --fetch book.yml
 ```
 
-它的行为和 `minerupress-fetch` 类似，但命令入口仍然是导出命令。
+它的行为和 `minerupress fetch` 类似，但命令入口仍然是导出命令：
+
+- `source: official_api` 时会调用 MinerU 官方 API
+- `source: local_toolchain` 时会调用你单独安装的 `mineru` CLI
+- `source: uploaded_result` 时不会额外抓取，只直接使用已有 `mineru_root`
 
 ## Cloudflare Pages 部署
 
@@ -112,7 +118,7 @@ PAGES_PROJECT=my-book
 
 ## 部署时机
 
-`cf_pages` 是 `on_export_done()` 阶段触发的，所以只要插件开启，执行一次 `minerupress-export` 就可能触发一次部署。
+`cf_pages` 是 `on_export_done()` 阶段触发的，所以只要插件开启，执行一次 `minerupress export` 就可能触发一次部署。
 
 因此建议：
 

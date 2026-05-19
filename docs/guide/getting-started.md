@@ -6,12 +6,21 @@
 - 推荐安装 `mkdocs` 和 `mkdocs-material`
 - 如果要用二维码过滤或中西文间距处理，安装对应可选依赖
 
-推荐安装：
+推荐在发布版可用后这样安装：
 
 ```bash
-pip install -e ".[all]"
+pip install "minerupress[all]"
 pip install mkdocs mkdocs-material
 ```
+
+如果你更喜欢独立 CLI 环境，也可以用 `pipx`：
+
+```bash
+pipx install 'minerupress[all]'
+pipx inject minerupress mkdocs mkdocs-material
+```
+
+如果你是在开发工具链本身，而不是普通使用，请改看 [安装与升级](install-and-upgrade.md) 里的开发安装一节。
 
 ## 创建一本新书工作区
 
@@ -51,7 +60,7 @@ resources/mineru/
 3. 运行导出
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 ```
 
 导出结果默认会写到：
@@ -65,26 +74,26 @@ minerupress-export book.yml
 mkdocs serve
 ```
 
-如果你是从一份原始 PDF 开始，而不是已经有本地 MinerU 输出，建议直接按 [实战工作流](workflow-run-a-book.md) 里的“隔离工作区 + `minerupress-fetch`”路线操作。
+如果你是从一份原始 PDF 开始，而不是已经有本地 MinerU 输出，建议直接按 [实战工作流](workflow-run-a-book.md) 里的“隔离工作区 + `minerupress fetch`”路线操作。
 
 ## 常见命令
 
 本地导出：
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 ```
 
 已有 API 配置时，先抓取再导出：
 
 ```bash
-minerupress-fetch book.yml
+minerupress fetch book.yml
 ```
 
 已有部分本地输出，希望先补抓再导出：
 
 ```bash
-minerupress-export --fetch book.yml
+minerupress export --fetch book.yml
 ```
 
 严格构建检查：
@@ -96,7 +105,7 @@ mkdocs build --strict
 生成文档指纹：
 
 ```bash
-python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
 ## 目录建议
@@ -128,7 +137,7 @@ my-book/
 所有相对路径都以 `book.yml` 所在目录解析，因此下面这种调用是安全的：
 
 ```bash
-minerupress-export /absolute/path/to/my-book/book.yml
+minerupress export /absolute/path/to/my-book/book.yml
 ```
 
 这意味着你不需要依赖当前 shell 所在目录来保证配置正确解析。

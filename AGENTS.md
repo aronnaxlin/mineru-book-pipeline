@@ -20,7 +20,7 @@
 - `minerupress/`: Python 包源码。
 - `minerupress/core.py`: 导出引擎，负责章节边界查找、item -> Markdown、图片复制和插件 hook 调用。
 - `minerupress/loader.py`: 解析 `book.yml`，组装 `BookConfig`、插件实例和可选 `APIConfig`。
-- `minerupress/cli.py`: `minerupress-export` 和 `minerupress-fetch` 命令入口。
+- `minerupress/cli.py`: 统一 CLI 入口，支持 `minerupress export|fetch|headings|fingerprint`，并兼容旧命令。
 - `minerupress/api_client.py`: MinerU Precise API v4 客户端，包含上传、轮询、下载和 PDF 分片。
 - `minerupress/fingerprint.py`: 对 `docs/` 下 Markdown 生成 SHA-256 指纹并输出差异。
 - `minerupress/plugins/`: 内置插件和 `ExportPlugin` 基类。
@@ -54,19 +54,19 @@ pip install -e ".[all]"
 本地 MinerU 输出导出：
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 ```
 
 云端 MinerU API 拉取并导出：
 
 ```bash
-minerupress-fetch book.yml
+minerupress fetch book.yml
 ```
 
 已有本地输出时补充拉取缺失分册：
 
 ```bash
-minerupress-export --fetch book.yml
+minerupress export --fetch book.yml
 ```
 
 模板书目录里可用的标准流水线：
@@ -93,17 +93,17 @@ python -m compileall minerupress
 导出相关改动后，如果本地有有效 `book.yml` 和 `resources/mineru/`：
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 mkdocs build --strict
 ```
 
 文档内容发生变化后可生成/比较指纹：
 
 ```bash
-python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
-涉及 `minerupress-fetch` 或 `api_client.py` 的改动通常需要网络和 `MINERU_API_TOKEN`，不要擅自调用会上传 PDF 或消耗云端资源的命令，除非用户明确要求。
+涉及 `minerupress fetch` 或 `api_client.py` 的改动通常需要网络和 `MINERU_API_TOKEN`，不要擅自调用会上传 PDF 或消耗云端资源的命令，除非用户明确要求。
 
 涉及 `cf_pages` 的改动注意：插件会在 `CLOUDFLARE_API_TOKEN` 存在时执行 `mkdocs build` 和 `wrangler pages deploy`。本地验证时避免意外部署。
 
@@ -121,7 +121,7 @@ python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.jso
 
 `volume_uid` 是 MinerU 输出目录名的可匹配前缀，不一定是完整 UUID。单 PDF 自动拆分后会形成 `volume_uid_part1`、`volume_uid_part2` 等目录，章节仍使用同一个逻辑 `volume_uid`。章节边界可从 `title` 自动推导，支持 `第10章`、`附录A`、`Chapter 3`、`项目二`、`10.1` 等；只有 MinerU 标题异常或存在歧义时再写 `aliases`、`start_pattern` 或 `start_patterns`。
 
-可选 `api:` 块用于 `minerupress-fetch`；`sources` 的 key 要与章节的 `volume_uid` 对应。
+可选 `api:` 块用于 `minerupress fetch`；`sources` 的 key 要与章节的 `volume_uid` 对应。
 
 可选 `deploy:` 块供 `cf_pages` 插件读取；目标 Pages 项目不存在时插件会创建项目后重试部署。
 

@@ -1,6 +1,6 @@
 # 导出流程
 
-这一页说明 `minerupress-export` 在内部做了什么，方便你定位问题或判断应该改配置、改插件，还是改源数据。
+这一页说明 `minerupress export` 在内部做了什么，方便你定位问题或判断应该改配置、改插件，还是改源数据。
 
 ## 整体流程
 
@@ -54,7 +54,7 @@
 如果你还没有稳定的章节配置，可以先运行：
 
 ```bash
-minerupress-headings resources/mineru --volume-uid <uid> --format yaml --body-only
+minerupress headings resources/mineru --volume-uid <uid> --format yaml --body-only
 ```
 
 它会读取 MinerU 的 `text_level == 1` 条目，标注目录页候选和正文候选，并给出一份可继续编辑的 `chapters:` 草稿。

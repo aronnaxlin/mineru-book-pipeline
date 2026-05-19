@@ -15,21 +15,24 @@ MineruPress 适合处理扫描教材、课程讲义、内部手册和长 PDF 知
 ```bash
 cp -r book_template/ my-book
 cd my-book
-minerupress-fetch book.yml
+minerupress fetch book.yml
 mkdocs serve
 ```
 
-如果已经有本地 MinerU 输出，把它放到 `resources/mineru/` 后运行：
+如果已经有现成的 MinerU 解析结果，把它放到 `resources/mineru/`，并把 `source` 改成 `uploaded_result` 后运行：
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 mkdocs serve
 ```
 
 标准链路如下：
 
 ```text
-PDF 或 MinerU API
+PDF / Office / 图片
+        |
+        v
+MinerU 官方 API / 外部安装的本地 MinerU CLI / 已上传解析结果
         |
         v
 resources/mineru/*_content_list.json 与图片
@@ -51,18 +54,41 @@ MkDocs Material 图书站点
 
 ## 安装
 
-当前推荐从 GitHub 安装开发版：
+要求 Python `>=3.11`。
+
+普通使用推荐直接安装发布包。首次 PyPI 发布完成后可用：
+
+```bash
+pip install "minerupress[all]"
+pip install mkdocs mkdocs-material
+```
+
+如果你更希望把 CLI 隔离到独立环境，推荐在发布后使用：
+
+```bash
+pipx install 'minerupress[all]'
+pipx inject minerupress mkdocs mkdocs-material
+```
+
+升级时分别使用：
+
+```bash
+pip install -U "minerupress[all]"
+```
+
+或：
+
+```bash
+pipx upgrade minerupress
+pipx inject minerupress mkdocs mkdocs-material --include-apps
+```
+
+如果你是在开发或修改工具链本身，再使用 GitHub 开发安装：
 
 ```bash
 git clone https://github.com/aronnaxlin/minerupress.git
 cd minerupress
 pip install -e ".[all]"
-```
-
-要求 Python `>=3.11`。如果你的图书工作区还没有 MkDocs：
-
-```bash
-pip install mkdocs mkdocs-material
 ```
 
 可选依赖：
@@ -84,7 +110,7 @@ cd ~/dev/my-book/
 
 模板里已经包含：
 
-- `book.yml`：书籍配置、章节列表、MinerU API 和部署配置。
+- `book.yml`：书籍配置、章节列表、来源选择、MinerU API / 本地工具链和部署配置。
 - `mkdocs.yml`：MkDocs Material 站点配置。
 - `.env.example`：敏感环境变量示例。
 - `Makefile`：常用导出、校验、构建命令。
@@ -104,28 +130,28 @@ my-book/
 
 ## 常用命令
 
-本地 MinerU 输出导出：
+已有 MinerU 解析结果，直接导出：
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 ```
 
-上传 PDF 到 MinerU 云端，拉取结果并导出：
+按 `source` 准备来源后导出：
 
 ```bash
-minerupress-fetch book.yml
+minerupress fetch book.yml
 ```
 
-已有本地输出时，补抓缺失分册后再导出：
+用导出命令先准备来源再导出：
 
 ```bash
-minerupress-export --fetch book.yml
+minerupress export --fetch book.yml
 ```
 
 分析 MinerU 输出中的正文大标题，生成章节配置草稿：
 
 ```bash
-minerupress-headings resources/mineru --volume-uid javaweb --format yaml --body-only
+minerupress headings resources/mineru --volume-uid javaweb --format yaml --body-only
 ```
 
 严格构建站点：
@@ -137,12 +163,13 @@ mkdocs build --strict
 生成或比对文档指纹：
 
 ```bash
-python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
 ## `book.yml` 示例
 
 ```yaml
+source: official_api
 mineru_root: resources/mineru
 docs_out: docs
 volume_uid: javaweb
@@ -160,6 +187,32 @@ chapters:
     title: 附录A 部分习题的解答
 ```
 
+来源选择：
+
+- `official_api`：使用 `api:` 配置走 MinerU 官方 API。新模板默认就是这个模式。
+- `local_toolchain`：调用你单独安装的 `mineru` CLI。MineruPress 不内置 MinerU 依赖，只做外部适配。
+- `uploaded_result`：直接读取 `mineru_root` 下已有的 MinerU 结果目录。
+
+如果你选择 `local_toolchain`，请先按 MinerU 官方说明单独安装，例如：
+
+```bash
+uv pip install -U "mineru[all]"
+```
+
+或从源码安装：
+
+```bash
+git clone https://github.com/opendatalab/MinerU.git
+cd MinerU
+uv pip install -e .[all]
+```
+
+MinerU 官方文档还提供了按需扩展安装和轻量客户端说明：
+
+- [Quick Start](https://opendatalab.github.io/MinerU/quick_start/)
+- [Extension Modules Installation Guide](https://opendatalab.github.io/MinerU/quick_start/extension_modules/)
+- [CLI Tools Usage Instructions](https://opendatalab.github.io/MinerU/usage/cli_tools/)
+
 边界匹配建议：
 
 - 优先只写 `title`。
@@ -170,8 +223,17 @@ chapters:
 所有相对路径都以 `book.yml` 所在目录为基准解析，所以可以从任意目录执行：
 
 ```bash
-minerupress-export /path/to/my-book/book.yml
+minerupress export /path/to/my-book/book.yml
 ```
+
+CLI 现已统一为 `minerupress <subcommand>`，例如：
+
+- `minerupress export`
+- `minerupress fetch`
+- `minerupress headings`
+- `minerupress fingerprint`
+
+旧入口 `minerupress-export`、`minerupress-fetch`、`minerupress-headings` 以及 `mineru-export`、`mineru-fetch` 仍然保留，便于旧项目平滑迁移。
 
 ## 内置插件
 
@@ -217,12 +279,13 @@ pytest
 python -m compileall minerupress
 ```
 
-仓库已配置 GitHub Actions，在 Python 3.11 和 3.12 上运行 `compileall` 与 `pytest`。MineruPress 目前处于 `0.1.0` alpha 阶段，推荐使用 GitHub 开发安装；正式 Release 和 PyPI 分发仍在准备中。
+仓库已配置 GitHub Actions，在 Python 3.11 和 3.12 上运行 `compileall` 与 `pytest`。如果你只是使用工具链，优先安装发布包；如果你要参与开发，再使用 GitHub 开发安装。
 
 ## 文档
 
 - [总览与术语](docs/index.md)
 - [快速开始](docs/guide/getting-started.md)
+- [安装与升级](docs/guide/install-and-upgrade.md)
 - [实战工作流](docs/guide/workflow-run-a-book.md)
 - [配置详解](docs/guide/configuration.md)
 - [导出流程](docs/guide/export-pipeline.md)

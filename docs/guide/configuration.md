@@ -7,6 +7,7 @@
 最小示例：
 
 ```yaml
+source: official_api
 mineru_root: resources/mineru
 docs_out: docs
 volume_uid: javaweb
@@ -24,6 +25,7 @@ chapters:
 
 字段说明：
 
+- `source`：来源类型，可选 `official_api`、`local_toolchain`、`uploaded_result`。新模板默认 `official_api`。
 - `mineru_root`：MinerU 输出根目录，默认 `resources/mineru`。
 - `docs_out`：导出到 MkDocs 的文档目录，默认 `docs`。
 - `volume_uid`：顶层默认逻辑分册 UID。章节未单独设置时继承它。
@@ -81,7 +83,7 @@ chapters:
 从原始 MinerU 输出起步时，可以先让工具生成草稿：
 
 ```bash
-minerupress-headings resources/mineru --volume-uid javaweb --format yaml --body-only
+minerupress headings resources/mineru --volume-uid javaweb --format yaml --body-only
 ```
 
 它会优先使用正文页上的独立章号行生成 `start_pattern`，降低目录页 TOC 误匹配的概率。
@@ -107,7 +109,7 @@ volume_uid: javaweb
 
 ## `api:` 配置
 
-如果要直接调用 MinerU 云端 API：
+当 `source: official_api` 时，可直接调用 MinerU 云端 API：
 
 ```yaml
 api:
@@ -124,6 +126,48 @@ api:
 - `token` 留空时会读取 `MINERU_API_TOKEN`
 - `sources` 的 key 需要和章节使用的 `volume_uid` 对应
 - 相对路径同样按 `book.yml` 所在目录解析
+
+## `local_toolchain:` 配置
+
+当 `source: local_toolchain` 时，MineruPress 会调用你单独安装的 `mineru` CLI，再把输出整理成 `mineru_root/<volume_uid>_full` 或 `_partN` 目录。
+
+```yaml
+local_toolchain:
+  executable: mineru
+  args:
+    - -b
+    - pipeline
+  sources:
+    javaweb: resources/pdfs/javaweb.pdf
+```
+
+说明：
+
+- MineruPress 不内置 MinerU 依赖；本地工具链需要你按 MinerU 官方文档单独安装
+- `executable` 默认为 `mineru`
+- `args` 只放额外参数；不要自己写 `-p/--path` 或 `-o/--output`
+- `sources` 的 key 同样需要和章节使用的 `volume_uid` 对应
+- 相对路径同样按 `book.yml` 所在目录解析
+
+常见安装方式：
+
+```bash
+uv pip install -U "mineru[all]"
+```
+
+或：
+
+```bash
+git clone https://github.com/opendatalab/MinerU.git
+cd MinerU
+uv pip install -e .[all]
+```
+
+更多按需安装说明见：
+
+- [MinerU Quick Start](https://opendatalab.github.io/MinerU/quick_start/)
+- [MinerU Extension Modules](https://opendatalab.github.io/MinerU/quick_start/extension_modules/)
+- [MinerU CLI Tools](https://opendatalab.github.io/MinerU/usage/cli_tools/)
 
 ## `deploy:` 配置
 
@@ -150,6 +194,7 @@ MineruPress 不依赖当前工作目录。`book.yml` 中所有相对路径都会
 
 这包括：
 
+- `source` 相关块里的路径，例如 `local_toolchain.sources`
 - `mineru_root`
 - `docs_out`
 - `api.sources`

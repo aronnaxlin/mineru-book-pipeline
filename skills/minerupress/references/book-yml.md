@@ -1,8 +1,9 @@
 # book.yml Reference
 
-Minimal local export:
+Minimal uploaded-result export:
 
 ```yaml
+source: uploaded_result
 mineru_root: resources/mineru
 docs_out: docs
 volume_uid: javaweb
@@ -23,6 +24,7 @@ chapters:
 Cloud API:
 
 ```yaml
+source: official_api
 api:
   token: ""  # prefer MINERU_API_TOKEN in .env
   enable_formula: true
@@ -35,6 +37,7 @@ api:
 Recommended first-pass fetch config for a raw PDF:
 
 ```yaml
+source: official_api
 volume_uid: my-book
 allow_missing_boundaries: true
 
@@ -51,6 +54,20 @@ chapters:
     title: 我的图书标题
 ```
 
+Local MinerU CLI (installed separately, not bundled by MineruPress):
+
+```yaml
+source: local_toolchain
+
+local_toolchain:
+  executable: mineru
+  args:
+    - -b
+    - pipeline
+  sources:
+    my-book: resources/pdfs/my-book.pdf
+```
+
 Boundary controls:
 
 - `title`: canonical display title and default boundary source.
@@ -63,8 +80,12 @@ Boundary controls:
 Practical guidance:
 
 - If starting from a raw PDF, do the first run in an isolated workspace.
-- Copy the PDF into the workspace before running `minerupress-fetch`.
-- Use `minerupress-headings resources/mineru --volume-uid my-book --format yaml --body-only` after the first fetch to draft chapter boundaries.
+- Copy the PDF into the workspace before running `minerupress fetch`.
+- `local_toolchain` requires a separately installed MinerU CLI. Recommended official install docs:
+  - https://opendatalab.github.io/MinerU/quick_start/
+  - https://opendatalab.github.io/MinerU/quick_start/extension_modules/
+  - https://opendatalab.github.io/MinerU/usage/cli_tools/
+- Use `minerupress headings resources/mineru --volume-uid my-book --format yaml --body-only` after the first fetch to draft chapter boundaries.
 - If TOC entries are matched too early, use a display-only `title` plus an exact `start_pattern`.
 
 Supported inferred heading styles include Chinese chapter/section labels, appendices, English `Chapter`/`Unit`/`Module`/`Part`/`Section`, project/module/task labels, and numeric headings such as `10.1`.

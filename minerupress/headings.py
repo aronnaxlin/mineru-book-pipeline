@@ -11,6 +11,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Sequence
 from typing import Iterable
 
 _NATURAL_PARTS = re.compile(r"(\d+)")
@@ -134,9 +135,13 @@ def print_yaml(candidates: Iterable[HeadingCandidate]) -> None:
         print()
 
 
-def main() -> None:
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    prog: str = "minerupress-headings",
+) -> int:
     parser = argparse.ArgumentParser(
-        prog="minerupress-headings",
+        prog=prog,
         description="Inspect MinerU output and suggest chapter boundary YAML.",
     )
     parser.add_argument("mineru_root", nargs="?", default="resources/mineru")
@@ -163,7 +168,7 @@ def main() -> None:
         action="store_true",
         help="Also show generic MinerU level-1 headings that are not chapters, parts, or appendices.",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(list(argv) if argv is not None else None)
 
     segments = load_content_items(Path(args.mineru_root), args.volume_uid)
     candidates = analyze_headings(
@@ -176,6 +181,7 @@ def main() -> None:
         print_yaml(candidates)
     else:
         print_report(candidates)
+    return 0
 
 
 def _classify_heading(

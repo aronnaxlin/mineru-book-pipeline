@@ -1,6 +1,12 @@
 # book.yml — 新书配置文件，复制此模板并填写
-# 运行: minerupress-export book.yml      （使用本地 MinerU 输出）
-# 运行: minerupress-fetch  book.yml      （上传 PDF 到云端 API，再导出）
+# 运行: minerupress export book.yml      （直接导出已有 MinerU 结果）
+# 运行: minerupress fetch  book.yml      （按 source 准备来源，再导出）
+
+# 数据来源：
+# - official_api: MinerU 官方 API（默认，推荐新项目）
+# - local_toolchain: 你自己单独安装的本地 MinerU CLI
+# - uploaded_result: 已经放到 mineru_root 下的 MinerU 解析结果
+source: official_api
 
 # MinerU 输出根目录（包含各分册子目录）
 mineru_root: resources/mineru
@@ -19,8 +25,28 @@ toc_max_page: 10
 # 默认严格模式：任一章节边界找不到就失败，避免静默生成错位章节。
 allow_missing_boundaries: false
 
+# ── 可选：本地 MinerU 工具链（外部安装，不内置在 MineruPress） ───────────────
+# 仅当 source: local_toolchain 时使用。
+# 需要你先按 MinerU 官方文档自行安装 `mineru` CLI，例如：
+#   uv pip install -U "mineru[all]"
+# 或：
+#   git clone https://github.com/opendatalab/MinerU.git
+#   cd MinerU && uv pip install -e .[all]
+#
+# local_toolchain:
+#   executable: mineru
+#   args:                       # 额外 CLI 参数；不要写 -p / -o，MineruPress 会自动补上
+#     - -b
+#     - pipeline
+#   sources:                    # volume_uid前缀 → 本地 PDF / 图片 / Office 文件或目录
+#     73d5b3e7: resources/pdfs/book.pdf
+#
+# 如果只想装轻量客户端或按需扩展，请参考：
+# https://opendatalab.github.io/MinerU/quick_start/extension_modules/
+# ──────────────────────────────────────────────────────────────────────────
+
 # ── 可选：MinerU 云端 API ──────────────────────────────────────────────────
-# 填写此块后可用 minerupress-fetch 直接上传 PDF，无需本地运行 MinerU。
+# 仅当 source: official_api 时使用。
 # 敏感值（token）推荐写在 .env 文件中，不要提交到 git。
 #
 # api:
@@ -35,7 +61,7 @@ allow_missing_boundaries: false
 # ──────────────────────────────────────────────────────────────────────────
 
 # ── 可选：Cloudflare Pages 部署 ────────────────────────────────────────────
-# 在 plugins 中加入 cf_pages 后，每次 minerupress-export 完成会自动部署。
+# 在 plugins 中加入 cf_pages 后，每次 minerupress export 完成会自动部署。
 # CLOUDFLARE_ACCOUNT_ID 和 CLOUDFLARE_API_TOKEN 写在 .env 中。
 #
 # deploy:

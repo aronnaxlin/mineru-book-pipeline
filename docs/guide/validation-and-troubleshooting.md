@@ -13,14 +13,14 @@ python -m compileall minerupress
 导出相关修改后，建议至少运行：
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 mkdocs build --strict
 ```
 
 如果涉及 Markdown 内容变更，还可以生成指纹：
 
 ```bash
-python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
 ## 指纹机制
@@ -61,8 +61,8 @@ python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.jso
 可以先跑标题分析命令辅助判断：
 
 ```bash
-minerupress-headings resources/mineru --format report
-minerupress-headings resources/mineru --format yaml --body-only
+minerupress headings resources/mineru --format report
+minerupress headings resources/mineru --format yaml --body-only
 ```
 
 第一条用于看 TOC 和正文边界如何分布，第二条用于生成 `chapters:` 草稿。
@@ -99,7 +99,7 @@ minerupress-headings resources/mineru --format yaml --body-only
 
 1. 先把原始 PDF 复制到当前工作区的 `resources/pdfs/`
 2. 让 `api.sources` 指向这份本地副本
-3. 再执行 `minerupress-fetch`
+3. 再执行 `minerupress fetch`
 
 这样分片 PDF、抓取结果和生成物都会落在同一个隔离工作区里。
 

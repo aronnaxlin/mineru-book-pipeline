@@ -11,14 +11,31 @@ MineruPress is a reusable `MinerU -> Markdown -> MkDocs` publishing pipeline for
 - Infer chapter boundaries from titles such as `第10章`, `附录A`, `Chapter 3`, `项目二`, or `10.1`.
 - Preserve MinerU `code_body` blocks and escape literal HTML/XML tags in prose.
 - Rebuild generated `docs/chapters/` and `docs/images/` on every export.
-- Inspect MinerU headings and suggest `book.yml` chapter YAML with `minerupress-headings`.
+- Inspect MinerU headings and suggest `book.yml` chapter YAML with `minerupress headings`.
 - Support image filtering, CJK spacing, Markdown fingerprinting, and optional Cloudflare Pages deployment.
 
 ## Install
 
+Release-package install path:
+
 ```bash
-pip install -e ".[all]"
+pip install "minerupress[all]"
 pip install mkdocs mkdocs-material
+```
+
+For an isolated CLI install after release:
+
+```bash
+pipx install 'minerupress[all]'
+pipx inject minerupress mkdocs mkdocs-material
+```
+
+For toolchain development instead of normal usage:
+
+```bash
+git clone https://github.com/aronnaxlin/minerupress.git
+cd minerupress
+pip install -e ".[all]"
 ```
 
 Optional dependency groups:
@@ -48,7 +65,7 @@ Then:
 4. Export and preview
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 mkdocs serve
 ```
 
@@ -63,32 +80,34 @@ mkdocs build --strict
 Local export:
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 ```
 
 Fetch from MinerU cloud API, then export:
 
 ```bash
-minerupress-fetch book.yml
+minerupress fetch book.yml
 ```
 
 Fetch first, then export from the main CLI:
 
 ```bash
-minerupress-export --fetch book.yml
+minerupress export --fetch book.yml
 ```
 
 Fingerprint Markdown output:
 
 ```bash
-python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
 Inspect heading candidates and generate chapter YAML:
 
 ```bash
-minerupress-headings resources/mineru --volume-uid javaweb --format yaml --body-only
+minerupress headings resources/mineru --volume-uid javaweb --format yaml --body-only
 ```
+
+The CLI now uses the unified `minerupress <subcommand>` form. Legacy wrappers such as `minerupress-export`, `minerupress-fetch`, `minerupress-headings`, `mineru-export`, and `mineru-fetch` remain available for backward compatibility.
 
 ## Minimal `book.yml`
 
@@ -125,6 +144,7 @@ Guidance:
 
 - [Chinese docs index](index.md)
 - [Getting Started](guide/getting-started.md)
+- [Install and Upgrade](guide/install-and-upgrade.md)
 - [End-to-End Workflow](guide/workflow-run-a-book.md)
 - [Configuration](guide/configuration.md)
 - [Export Pipeline](guide/export-pipeline.md)

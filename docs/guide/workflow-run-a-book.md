@@ -105,7 +105,7 @@ chapters:
 ## 5. 执行抓取
 
 ```bash
-minerupress-fetch book.yml
+minerupress fetch book.yml
 ```
 
 这一步通常会自动完成：
@@ -127,7 +127,7 @@ minerupress-fetch book.yml
 现在可以先用内置命令做一轮自动分析：
 
 ```bash
-minerupress-headings resources/mineru --volume-uid software-testing-methods
+minerupress headings resources/mineru --volume-uid software-testing-methods
 ```
 
 报告里会标出：
@@ -140,7 +140,7 @@ minerupress-headings resources/mineru --volume-uid software-testing-methods
 如果只想拿可复制的章节配置草稿：
 
 ```bash
-minerupress-headings resources/mineru --volume-uid software-testing-methods --format yaml --body-only
+minerupress headings resources/mineru --volume-uid software-testing-methods --format yaml --body-only
 ```
 
 重点观察：
@@ -156,7 +156,7 @@ minerupress-headings resources/mineru --volume-uid software-testing-methods --fo
 
 - `title` 用展示友好的纯章节名
 - `start_pattern` 精确锁定正文页章号行
-- 优先从 `minerupress-headings --format yaml --body-only` 的结果开始改
+- 优先从 `minerupress headings --format yaml --body-only` 的结果开始改
 
 例如：
 
@@ -194,7 +194,7 @@ nav:
 ## 9. 重跑标准导出
 
 ```bash
-minerupress-export book.yml
+minerupress export book.yml
 ```
 
 这次检查日志里的每章 item 数量是否合理。一个很实用的经验是：
@@ -210,7 +210,7 @@ minerupress-export book.yml
 
 ```bash
 mkdocs build --strict
-python -m minerupress.fingerprint --docs-dir docs --out reports/fingerprints.json
+minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ```
 
 这样你会得到：
@@ -243,7 +243,7 @@ software-testing-methods/
 
 现象：
 
-- `minerupress-fetch` 在 `_part1.pdf`、`_part2.pdf` 写入时报 `PermissionError`
+- `minerupress fetch` 在 `_part1.pdf`、`_part2.pdf` 写入时报 `PermissionError`
 
 原因：
 

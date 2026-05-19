@@ -9,9 +9,11 @@ Usage:
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 from pathlib import Path
+from typing import Sequence
 
 
 def sha256(path: Path) -> str:
@@ -39,13 +41,15 @@ def diff(old: dict, new: dict) -> list[str]:
     return lines
 
 
-def main() -> None:
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Fingerprint docs/ Markdown files")
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    prog: str = "minerupress-fingerprint",
+) -> int:
+    parser = argparse.ArgumentParser(prog=prog, description="Fingerprint docs/ Markdown files")
     parser.add_argument("--docs-dir", default="docs")
     parser.add_argument("--out", default="reports/fingerprints.json")
-    args = parser.parse_args()
+    args = parser.parse_args(list(argv) if argv is not None else None)
 
     docs_dir = Path(args.docs_dir)
     out_path = Path(args.out)
@@ -66,6 +70,7 @@ def main() -> None:
 
     out_path.write_text(json.dumps(current, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"Fingerprints written: {len(current)} files → {out_path}")
+    return 0
 
 
 if __name__ == "__main__":

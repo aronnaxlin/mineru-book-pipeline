@@ -8,11 +8,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Literal
 
 import yaml
 
 from .core import BookConfig, ChapterConfig
 from .plugins.base import ExportPlugin
+
+SourceKind = Literal["uploaded_result", "local_toolchain", "official_api"]
 
 
 @dataclass
@@ -26,21 +29,48 @@ class APIConfig:
     sources: dict[str, str] = field(default_factory=dict)
 
 
+@dataclass
+class LocalToolchainConfig:
+    """Optional local MinerU CLI settings from book.yml."""
+    executable: str = "mineru"
+    args: list[str] = field(default_factory=list)
+    sources: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class SourceConfig:
+    """Selected MinerU source and its optional preparation settings."""
+    kind: SourceKind
+    api: APIConfig | None = None
+    local_toolchain: LocalToolchainConfig | None = None
+
+
 def load_book_config(
     book_yml: Path,
-) -> tuple[BookConfig, list[ExportPlugin], APIConfig | None]:
+) -> tuple[BookConfig, list[ExportPlugin], SourceConfig]:
     """
-    Parse a book.yml file and return (BookConfig, [plugins], APIConfig|None).
+    Parse a book.yml file and return (BookConfig, [plugins], SourceConfig).
 
     book.yml schema
     ---------------
+    source: official_api                 # optional, default for new configs
     mineru_root: resources/mineru          # optional, default shown
     docs_out: docs                         # optional
     volume_uid: 73d5b3e7                   # optional default for chapters
     toc_max_page: 10                       # optional; 0 disables TOC-page skipping
     allow_missing_boundaries: false        # optional; strict by default
 
-    # Optional: use MinerU cloud API instead of local files
+    # Uploaded MinerU result already exists under mineru_root
+    # source: uploaded_result
+
+    # Optional: use a locally installed MinerU CLI
+    local_toolchain:
+      executable: mineru
+      args: []                             # optional extra CLI args; do not include -p/-o
+      sources:                             # volume_uid prefix -> local source file/dir
+        73d5b3e7: resources/pdfs/vol1.pdf
+
+    # Optional: use MinerU official API
     api:
       token: "your-token"                  # or set MINERU_API_TOKEN env var
       enable_formula: true
@@ -121,7 +151,25 @@ def load_book_config(
             },
         )
 
-    return config, plugins, api_cfg
+    local_cfg: LocalToolchainConfig | None = None
+    if "local_toolchain" in raw:
+        l = raw["local_toolchain"]
+        local_cfg = LocalToolchainConfig(
+            executable=str(l.get("executable", "mineru")),
+            args=[str(arg) for arg in l.get("args", [])],
+            sources={
+                str(k): str(_resolve_path(base_dir, v))
+                for k, v in l.get("sources", {}).items()
+            },
+        )
+
+    source_cfg = SourceConfig(
+        kind=_resolve_source_kind(raw),
+        api=api_cfg,
+        local_toolchain=local_cfg,
+    )
+
+    return config, plugins, source_cfg
 
 
 def _optional_int(value) -> int | None:
@@ -136,12 +184,41 @@ def _resolve_path(base_dir: Path, value) -> Path:
     return path.resolve()
 
 
+def _resolve_source_kind(raw: dict) -> SourceKind:
+    aliases = {
+        "upload": "uploaded_result",
+        "uploaded": "uploaded_result",
+        "uploaded_result": "uploaded_result",
+        "local": "local_toolchain",
+        "local_toolchain": "local_toolchain",
+        "api": "official_api",
+        "official_api": "official_api",
+    }
+
+    source_value = raw.get("source")
+    if source_value is None:
+        # Backward compatibility for existing projects:
+        # keep legacy "api:" configs on official_api and everything else on uploaded_result.
+        if "api" in raw:
+            return "official_api"
+        if "local_toolchain" in raw:
+            return "local_toolchain"
+        return "uploaded_result"
+
+    normalized = aliases.get(str(source_value).strip().lower())
+    if normalized is None:
+        allowed = ", ".join(sorted(set(aliases.values())))
+        raise ValueError(f"Unsupported source: {source_value!r}. Expected one of: {allowed}")
+    return normalized
+
+
 def _default_volume_uid(raw: dict) -> str:
     if raw.get("volume_uid"):
         return str(raw["volume_uid"])
-    sources = raw.get("api", {}).get("sources", {})
-    if len(sources) == 1:
-        return str(next(iter(sources.keys())))
+    for source_key in ("api", "local_toolchain"):
+        sources = raw.get(source_key, {}).get("sources", {})
+        if len(sources) == 1:
+            return str(next(iter(sources.keys())))
     return ""
 
 
