@@ -17,11 +17,11 @@ cd minerupress
 pip install -e ".[all]"
 ```
 
-For a new book workspace, copy `book_template/` outside the toolchain repo or
-use it as the starting point for `book.yml`, `mkdocs.yml`, `.env.example`, and
-`Makefile`. Keep real PDFs, MinerU output, `.env`, generated `docs/`, and
-generated `site/` out of the toolchain repository unless the user explicitly
-asks to commit a book project.
+For a new book workspace, run `minerupress init <directory>` outside the
+toolchain repo or use the bundled template as the starting point for `book.yml`,
+`mkdocs.yml`, `.env.example`, and `Makefile`. Keep real PDFs, MinerU output,
+`.env`, generated `docs/`, and generated `site/` out of the toolchain
+repository unless the user explicitly asks to commit a book project.
 
 ## Preferred Workflow
 

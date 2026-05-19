@@ -127,12 +127,15 @@ uv pip install -e .[all]
 
 ```bash
 minerupress --help
+minerupress init --help
 minerupress export --help
 ```
 
 如果你已经准备好一个图书工作区，可以继续：
 
 ```bash
+minerupress init my-book
+cd my-book
 minerupress export book.yml
 mkdocs serve
 ```

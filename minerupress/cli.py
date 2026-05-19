@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from importlib import resources
 from pathlib import Path
 from typing import Sequence
 
@@ -262,6 +263,32 @@ def _run_fingerprint(args: argparse.Namespace) -> int:
     )
 
 
+def _run_init(args: argparse.Namespace) -> int:
+    target = Path(args.directory).expanduser()
+    if target.exists() and not target.is_dir():
+        print(f"Error: target exists and is not a directory: {target}", file=sys.stderr)
+        return 1
+    if target.exists() and any(target.iterdir()) and not args.force:
+        print(
+            f"Error: target directory is not empty: {target}\n"
+            "Use --force to merge the template into this directory.",
+            file=sys.stderr,
+        )
+        return 1
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    template = resources.files("minerupress").joinpath("book_template")
+    with resources.as_file(template) as template_path:
+        shutil.copytree(template_path, target, dirs_exist_ok=True)
+
+    print(f"Created MineruPress book workspace: {target.resolve()}")
+    print("Next steps:")
+    print(f"  cd {target}")
+    print("  edit book.yml")
+    print("  minerupress export book.yml")
+    return 0
+
+
 def _configure_export_parser(parser: argparse.ArgumentParser) -> None:
     _add_book_args(parser)
     parser.add_argument(
@@ -314,12 +341,34 @@ def _configure_fingerprint_parser(parser: argparse.ArgumentParser) -> None:
     parser.set_defaults(handler=_run_fingerprint, command="fingerprint")
 
 
+def _configure_init_parser(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "directory",
+        nargs="?",
+        default="my-book",
+        help="Directory to create (default: my-book)",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Merge the template into an existing non-empty directory.",
+    )
+    parser.set_defaults(handler=_run_init, command="init")
+
+
 def build_parser(prog: str = "minerupress") -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=prog,
-        description="MineruPress CLI for export, fetch, heading inspection, and fingerprints.",
+        description="MineruPress CLI for initializing, exporting, fetching, heading inspection, and fingerprints.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    init_parser = subparsers.add_parser(
+        "init",
+        help="Create a new book workspace from the bundled template.",
+        description="Create a new MineruPress book workspace from the bundled template.",
+    )
+    _configure_init_parser(init_parser)
 
     export_parser = subparsers.add_parser(
         "export",

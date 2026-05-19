@@ -24,11 +24,17 @@ pipx inject minerupress mkdocs mkdocs-material
 
 ## 创建一本新书工作区
 
-MineruPress 仓库本身是工具链，不建议把真实图书内容直接塞进仓库根目录。更稳妥的做法是复制模板到单独目录：
+MineruPress 仓库本身是工具链，不建议把真实图书内容直接塞进仓库根目录。pip 安装后也不需要找到源码里的 `book_template/`，直接生成独立工作区：
 
 ```bash
-cp -r book_template/ ~/dev/my-book/
+minerupress init ~/dev/my-book/
 cd ~/dev/my-book/
+```
+
+新建后的模板包含占位首页和占位章节，可以先运行：
+
+```bash
+mkdocs serve
 ```
 
 模板里包含：
@@ -57,7 +63,8 @@ resources/mineru/
 
 1. 编辑 `book.yml`
 2. 按章节填写 `slug` 和 `title`
-3. 运行导出
+3. 准备 MinerU 输出或配置抓取来源
+4. 运行导出
 
 ```bash
 minerupress export book.yml

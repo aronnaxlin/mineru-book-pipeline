@@ -24,7 +24,7 @@
 - `minerupress/api_client.py`: MinerU Precise API v4 客户端，包含上传、轮询、下载和 PDF 分片。
 - `minerupress/fingerprint.py`: 对 `docs/` 下 Markdown 生成 SHA-256 指纹并输出差异。
 - `minerupress/plugins/`: 内置插件和 `ExportPlugin` 基类。
-- `book_template/`: 新书模板，包含 `book.yml`、`mkdocs.yml`、`.env.example`、`Makefile`。
+- `book_template/`: 仓库内的新书模板副本；pip 安装后用户应通过 `minerupress init <dir>` 生成工作区。
 
 ## 环境与安装
 
@@ -157,7 +157,7 @@ minerupress fingerprint --docs-dir docs --out reports/fingerprints.json
 ## 当前仓库注意事项
 
 - 当前仓库没有专门的测试目录；修改后至少运行 `python -m compileall minerupress`。
-- `book_template/Makefile` 是给复制后的新书项目使用的，不代表根目录有 `make` 工作流。
+- `book_template/Makefile` 是给新书工作区使用的，不代表根目录有 `make` 工作流。
 - `api_client.fetch()` 返回 `list[Path]`，顺序必须与原始 PDF chunk 顺序一致；`_do_fetch()` 会把这些目录改名为 `volume_uid_full` 或 `volume_uid_partN`，并清理同 UID 的旧 full/part 输出。
 - `core.export()` 会根据 UID 前缀在 `mineru_root` 下自动发现一个或多个分册目录，并按自然顺序顺推章节边界；改匹配逻辑时要避免破坏已有短前缀配置。
 - `core.export()` 每次都会重建 `docs/chapters/` 和 `docs/images/`，不要在这些目录里放手工维护的内容。

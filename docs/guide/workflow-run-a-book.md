@@ -43,7 +43,7 @@
 从现有模板起步：
 
 ```bash
-cp -R book_template .temp/book-runs/software-testing-methods
+minerupress init .temp/book-runs/software-testing-methods
 ```
 
 然后进入工作区：

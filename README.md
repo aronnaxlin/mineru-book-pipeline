@@ -13,17 +13,21 @@ MineruPress 适合处理扫描教材、课程讲义、内部手册和长 PDF 知
 复制模板就是一本新书的起点：
 
 ```bash
-cp -r book_template/ my-book
+minerupress init my-book
 cd my-book
-minerupress fetch book.yml
 mkdocs serve
 ```
 
-如果已经有现成的 MinerU 解析结果，把它放到 `resources/mineru/`，并把 `source` 改成 `uploaded_result` 后运行：
+这会生成一份可以先预览的占位站点。准备好 MinerU 解析结果后，把它放到 `resources/mineru/` 并运行：
 
 ```bash
 minerupress export book.yml
-mkdocs serve
+```
+
+如果你是从 PDF 开始，先在 `book.yml` 里把 `source` 改成 `official_api`，配置 `api.sources`，再运行：
+
+```bash
+minerupress fetch book.yml
 ```
 
 标准链路如下：
@@ -101,10 +105,10 @@ pip install -e ".[all]"
 
 ## 新书工作区
 
-建议每本书使用独立目录，不要直接把某本书的生成物放进工具链仓库。
+建议每本书使用独立目录，不要直接把某本书的生成物放进工具链仓库。pip 安装后模板不在当前目录里，直接用 `minerupress init` 生成工作区即可：
 
 ```bash
-cp -r book_template/ ~/dev/my-book/
+minerupress init ~/dev/my-book/
 cd ~/dev/my-book/
 ```
 

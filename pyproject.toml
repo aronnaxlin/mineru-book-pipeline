@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "minerupress"
-version = "0.1.0"
+version = "0.1.1"
 description = "Turn MinerU output into publishable MkDocs Material book sites"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -48,3 +48,15 @@ mineru-fetch  = "minerupress.cli:mineru_fetch_main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["minerupress*"]
+
+[tool.setuptools.package-data]
+minerupress = [
+    "book_template/.env.example",
+    "book_template/Makefile",
+    "book_template/book.yml",
+    "book_template/mkdocs.yml",
+    "book_template/docs/*.md",
+    "book_template/docs/chapters/*.md",
+    "book_template/resources/mineru/.gitkeep",
+    "book_template/resources/pdfs/.gitkeep",
+]

@@ -52,7 +52,7 @@ minerupress fetch book.yml
 
 如果 PDF 位于网盘目录、共享目录，或者你不希望把这本书的配置和生成物混进仓库根目录，推荐这样做：
 
-1. 复制 `book_template/` 到独立目录，或仓库内的临时目录
+1. 用 `minerupress init` 创建独立目录，或仓库内的临时目录
 2. 把源 PDF 复制到工作区内的 `resources/pdfs/`
 3. 在工作区写 `.env` 和 `book.yml`
 4. 运行 `minerupress fetch book.yml`

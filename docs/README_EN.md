@@ -53,20 +53,25 @@ Python `>=3.11` is required.
 Create a separate book workspace from the template:
 
 ```bash
-cp -r book_template/ ~/dev/my-book/
+minerupress init ~/dev/my-book/
 cd ~/dev/my-book/
 ```
 
 Then:
 
-1. Put MinerU output under `resources/mineru/`
-2. Edit `book.yml`
-3. Edit `mkdocs.yml`
+1. Preview the placeholder site
+2. Put MinerU output under `resources/mineru/`, or configure `source: official_api`
+3. Edit `book.yml`
 4. Export and preview
 
 ```bash
-minerupress export book.yml
 mkdocs serve
+```
+
+After real MinerU output is ready:
+
+```bash
+minerupress export book.yml
 ```
 
 Strict build:
@@ -157,4 +162,4 @@ Guidance:
 
 The repository root is the reusable toolchain, not a real book project. A previously used local book workspace has been moved to `local_book_workspace/` and added to `.gitignore`.
 
-For actual books, copy `book_template/` into a separate working directory and keep generated outputs, secrets, PDFs, and MinerU artifacts out of version control.
+For actual books, create a separate working directory with `minerupress init <directory>` and keep generated outputs, secrets, PDFs, and MinerU artifacts out of version control.

@@ -37,6 +37,31 @@ def test_root_cli_routes_export_subcommand(monkeypatch) -> None:
     }
 
 
+def test_root_cli_routes_init_subcommand(tmp_path: Path) -> None:
+    target = tmp_path / "my-book"
+
+    rc = cli.root_main(["init", str(target)])
+
+    assert rc == 0
+    assert (target / "book.yml").exists()
+    assert (target / "mkdocs.yml").exists()
+    assert (target / "docs" / "index.md").exists()
+    assert (target / "docs" / "chapters" / "ch01-overview.md").exists()
+    assert (target / "resources" / "mineru").is_dir()
+    assert (target / "resources" / "pdfs").is_dir()
+
+
+def test_init_refuses_non_empty_directory_without_force(tmp_path: Path) -> None:
+    target = tmp_path / "my-book"
+    target.mkdir()
+    (target / "existing.txt").write_text("keep me", encoding="utf-8")
+
+    rc = cli.root_main(["init", str(target)])
+
+    assert rc == 1
+    assert not (target / "book.yml").exists()
+
+
 def test_legacy_export_wrapper_inserts_subcommand(monkeypatch) -> None:
     captured = {}
 
